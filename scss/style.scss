@@ -1,6 +1,76 @@
-$primary-color: red;
+$navbar-bg: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+$navbar-brand-color: #fff;
+$navbar-link-color: #f8f9fa;
+$navbar-link-hover: #ffd700;
 
-h1
-{
-    color: $primary-color;
+.navbar-custom {
+  background: $navbar-bg;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+
+  .navbar-brand {
+    color: $navbar-brand-color;
+    font-weight: bold;
+    letter-spacing: 1px;
+    transition: color 0.3s;
+    text-decoration: none;
+    gap: 0.5rem;
+    &:hover {
+      color: $navbar-link-hover;
+    }
+    
+    .logo-icon {
+      width: 2rem;
+      height: 2rem;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.3s;
+    }
+    
+    &:hover .logo-icon {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    .logo-svg {
+      width: 1.25rem;
+      height: 1.25rem;
+      color: $navbar-brand-color;
+      stroke: currentColor;
+    }
+    
+    .logo-text {
+      font-size: 1.25rem;
+      font-weight: bold;
+      display: none;
+      @media (min-width: 576px) {
+        display: inline;
+      }
+    }
+  }
+
+  .nav-link {
+    color: $navbar-link-color !important;
+    font-weight: 500;
+    margin: 0 0.5rem;
+    transition: color 0.2s, transform 0.2s;
+    &:hover, &.active {
+      color: $navbar-link-hover !important;
+      transform: translateY(-2px) scale(1.08);
+      text-shadow: 0 2px 12px rgba(255,215,0,0.15);
+    }
+  }
+
+  .navbar-toggler {
+    border: none;
+    background: rgba(255, 255, 255, 0.25);
+    &:focus {
+      outline: none;
+      box-shadow: none;
+    }
+    .navbar-toggler-icon {
+      background-image: url("data:image/svg+xml;...");
+    }
+  }
 }
