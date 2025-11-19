@@ -64,3 +64,66 @@
 .navbar-custom .navbar-toggler .navbar-toggler-icon {
   background-image: url("data:image/svg+xml;...");
 }
+.navbar-custom .cart-link {
+  position: relative;
+  padding: 0.5rem;
+  color: #f8f9fa;
+  text-decoration: none;
+  border-radius: 0.5rem;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0.5rem;
+}
+.navbar-custom .cart-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #f8f9fa;
+}
+.navbar-custom .cart-link .cart-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  stroke: currentColor;
+}
+.navbar-custom .cart-link .cart-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  background-color: #ffd700;
+  color: #000;
+  font-size: 0.75rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  transform: translate(25%, -25%);
+}
+.navbar-custom .auth-buttons .btn-signin {
+  padding: 0.5rem 1rem;
+  color: #f8f9fa;
+  text-decoration: none;
+  border-radius: 0.5rem;
+  transition: background-color 0.3s;
+  font-weight: 500;
+}
+.navbar-custom .auth-buttons .btn-signin:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #f8f9fa;
+}
+.navbar-custom .auth-buttons .btn-signup {
+  padding: 0.5rem 1rem;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 0.5rem;
+  transition: opacity 0.3s, background-color 0.3s;
+  font-weight: 500;
+}
+.navbar-custom .auth-buttons .btn-signup:hover {
+  opacity: 0.9;
+  background-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
