@@ -4,7 +4,7 @@
   "description": "This is the final project",
   "main": "index.js",
   "scripts": {
-    "sass-builder": ""
+    "sass-builder": "sass --no-source-map scss:css"
   },
   "repository": {
     "type": "git",
@@ -15,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/Shubham-patel16/Webproject/issues"
   },
-  "homepage": "https://github.com/Shubham-patel16/Webproject#readme"
+  "homepage": "https://github.com/Shubham-patel16/Webproject#readme",
+  "dependencies": {
+    "bootstrap": "^5.3.8",
+    "sass": "^1.94.1"
+  }
 }
