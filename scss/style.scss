@@ -14,9 +14,6 @@ $navbar-link-hover: #ffd700;
     transition: color 0.3s;
     text-decoration: none;
     gap: 0.5rem;
-    &:hover {
-      color: $navbar-link-hover;
-    }
     
     .logo-icon {
       width: 2rem;
@@ -28,11 +25,6 @@ $navbar-link-hover: #ffd700;
       justify-content: center;
       transition: background-color 0.3s;
     }
-    
-    &:hover .logo-icon {
-      background-color: rgba(255, 255, 255, 0.3);
-    }
-    
     .logo-svg {
       width: 1.25rem;
       height: 1.25rem;
@@ -55,11 +47,7 @@ $navbar-link-hover: #ffd700;
     font-weight: 500;
     margin: 0 0.5rem;
     transition: color 0.2s, transform 0.2s;
-    &:hover, &.active {
-      color: $navbar-link-hover !important;
-      transform: translateY(-2px) scale(1.08);
-      text-shadow: 0 2px 12px rgba(255,215,0,0.15);
-    }
+
   }
 
   .navbar-toggler {
@@ -85,11 +73,6 @@ $navbar-link-hover: #ffd700;
     align-items: center;
     justify-content: center;
     margin: 0 0.5rem;
-    
-    &:hover {
-      background-color: rgba(255, 255, 255, 0.1);
-      color: $navbar-link-color;
-    }
     
     .cart-icon {
       width: 1.5rem;
@@ -124,10 +107,7 @@ $navbar-link-hover: #ffd700;
       transition: background-color 0.3s;
       font-weight: 500;
       
-      &:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-        color: $navbar-link-color;
-      }
+      
     }
     
     .btn-signup {
@@ -138,12 +118,7 @@ $navbar-link-hover: #ffd700;
       border-radius: 0.5rem;
       transition: opacity 0.3s, background-color 0.3s;
       font-weight: 500;
-      
-      &:hover {
-        opacity: 0.9;
-        background-color: rgba(255, 255, 255, 0.3);
-        color: $navbar-brand-color;
-      }
+    
     }
   }
 }

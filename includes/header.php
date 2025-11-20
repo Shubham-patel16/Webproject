@@ -56,7 +56,7 @@ $title = $title ?? "Home Page";
                         </li>
                         <li class="nav-item d-none d-sm-flex">
                             <div class="auth-buttons d-flex align-items-center gap-2 ms-2">
-                                <a href="pages/login.php" class="btn-signin">Login</a>
+                                <a href="pages/login.php" class="btn-signin ">Login</a>
                                 <a href="pages/register.php" class="btn-signup">Register</a>
                             </div>
                         </li>
