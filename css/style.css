@@ -42,6 +42,11 @@
   margin: 0 0.5rem;
   transition: color 0.2s, transform 0.2s;
 }
+.navbar-custom .nav-link:hover, .navbar-custom .nav-link.active {
+  color: #ffd700 !important;
+  transform: translateY(-2px) scale(1.08);
+  text-shadow: 0 2px 12px rgba(255, 215, 0, 0.15);
+}
 .navbar-custom .navbar-toggler {
   border: none;
   background: rgba(255, 255, 255, 0.25);
@@ -102,4 +107,8 @@
   border-radius: 0.5rem;
   transition: opacity 0.3s, background-color 0.3s;
   font-weight: 500;
+}
+
+.product-card {
+  transition: all 0.3s ease;
 }

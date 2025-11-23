@@ -1,8 +1,0 @@
-<?php
-$title = "Cart";
-include '../includes/header.php';
-?>
-
-<h1>Shopping Cart</h1>
-
-<?php include '../includes/footer.php'; ?>
