@@ -9,7 +9,7 @@ include 'includes/header.php';
         <!-- Background Video -->
         <video autoplay muted loop playsinline class="position-absolute top-0 start-0 w-100 h-100"
             style="object-fit: cover; z-index: 0;">
-            <source src="./images/Video.mp4" type="video/mp4">
+            <source src="./images/video.mp4" type="video/mp4">
         </video>
         <!-- Overlay for better text readability -->
         <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark" style="opacity: 0.4; z-index: 1;"></div>

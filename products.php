@@ -25,7 +25,7 @@ if (!in_array($sortBy, $validSorts)) {
     <div class="bg-light border-bottom">
         <div class="container px-4 py-3">
             <div class="d-flex align-items-center gap-2" style="font-size: 0.875rem;">
-                <a href="index. yphp" class="text-decoration-none" style="color: #667eea;">Home</a>
+                <a href="index.php" class="text-decoration-none" style="color: #667eea;">Home</a>
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="text-muted">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>

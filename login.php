@@ -1,6 +1,10 @@
 <?php
+session_start();
 $title = "Login";
 include 'includes/header.php';
+
+$error = isset($_SESSION['login_error']) ? $_SESSION['login_error'] : '';
+unset($_SESSION['login_error']);
 ?>
 
 <div class="min-vh-100">
@@ -35,7 +39,13 @@ include 'includes/header.php';
                             <p class="text-muted mb-0">Sign in to your account to continue</p>
                         </div>
 
-                        <form method="POST" action="login.php">
+                        <?php if (!empty($error)): ?>
+                            <div class="alert alert-danger">
+                                <?php echo htmlspecialchars($error); ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <form method="POST" action="login-process.php">
                             <div class="mb-3">
                                 <label class="form-label fw-semibold" style="color: #333;">Email Address</label>
                                 <div class="input-group">

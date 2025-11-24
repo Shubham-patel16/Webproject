@@ -1,6 +1,13 @@
 <?php
+session_start();
 $title = "Register";
 include 'includes/header.php';
+
+// Get errors and form data from session
+$errors = isset($_SESSION['registration_errors']) ? $_SESSION['registration_errors'] : [];
+$formData = isset($_SESSION['form_data']) ? $_SESSION['form_data'] : [];
+unset($_SESSION['registration_errors']);
+unset($_SESSION['form_data']);
 ?>
 
 <div class="min-vh-100">
@@ -34,6 +41,16 @@ include 'includes/header.php';
                             <h2 class="fw-bold mb-2" style="color: #333;">Create Your Account</h2>
                             <p class="text-muted mb-0">Join Premium Collection and start shopping today</p>
                         </div>
+
+                        <?php if (!empty($errors)): ?>
+                            <div class="alert alert-danger">
+                                <ul class="mb-0">
+                                    <?php foreach ($errors as $error): ?>
+                                        <li><?php echo htmlspecialchars($error); ?></li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </div>
+                        <?php endif; ?>
 
                         <form class="row g-3 needs-validation" action="signup.php" method="POST" novalidate>
                             <!-- Personal Information Section -->
