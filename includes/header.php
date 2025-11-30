@@ -1,5 +1,10 @@
 <?php
 $title = $title ?? "Home Page";
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+$isLoggedIn = isset($_SESSION['user']);
+$isAdmin = isset($_SESSION['admin']) && $_SESSION['admin'] === true;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -10,6 +15,10 @@ $title = $title ?? "Home Page";
     <title><?php echo $title; ?></title>
     <link rel="stylesheet" href="css/bootstrap.css">
     <link rel="stylesheet" href="css/style.css">
+    <script>
+        // Set login status for JavaScript
+        window.userLoggedIn = <?php echo $isLoggedIn ? 'true' : 'false'; ?>;
+    </script>
 </head>
 
 <body>
@@ -43,7 +52,7 @@ $title = $title ?? "Home Page";
                             href="about.php">About</a>
                     </li>
                     <li class="nav-item">
-                        <a href="cart.php" class="cart-link">
+                        <a href="<?php echo $isLoggedIn ? 'cart.php' : 'login.php'; ?>" class="cart-link">
                             <svg class="cart-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -51,12 +60,46 @@ $title = $title ?? "Home Page";
                             <span class="cart-badge">0</span>
                         </a>
                     </li>
-                    <li class="nav-item d-none d-sm-flex">
-                        <div class="auth-buttons d-flex align-items-center gap-2 ms-2">
-                            <a href="login.php" class="btn-signin">Login</a>
-                            <a href="register.php" class="btn-signup">Register</a>
-                        </div>
-                    </li>
+                    <?php if ($isAdmin): ?>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle <?php echo (basename($_SERVER['PHP_SELF']) == 'admin-dashboard.php') ? 'active' : ''; ?>"
+                                href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Admin
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="admin-dashboard.php">Dashboard</a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="admin-logout.php">Logout</a>
+                                </li>
+                            </ul>
+                        </li>
+                    <?php elseif ($isLoggedIn): ?>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle <?php echo (basename($_SERVER['PHP_SELF']) == 'user-profile.php') ? 'active' : ''; ?>"
+                                href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <?php echo htmlspecialchars($_SESSION['user']['first_name'] ?? 'Account'); ?>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="user-profile.php">My Profile</a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="logout.php">Logout</a>
+                                </li>
+                            </ul>
+                        </li>
+                    <?php else: ?>
+                        <li class="nav-item d-none d-sm-flex">
+                            <div class="auth-buttons d-flex align-items-center gap-2 ms-2">
+                                <a href="login.php" class="btn-signin">Login</a>
+                                <a href="register.php" class="btn-signup">Register</a>
+                            </div>
+                        </li>
+                    <?php endif; ?>
                 </ul>
             </div>
         </div>

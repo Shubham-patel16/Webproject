@@ -1,20 +1,19 @@
 <?php
-// Database Connection Configuration
-define('DB_HOST', 'localhost');
+// Database Connection Configuration (XAMPP default)
+define('DB_HOST', '127.0.0.1'); // Use TCP to avoid missing socket errors
 define('DB_USER', 'root');
 define('DB_PASSWORD', '');
 define('DB_NAME', 'webproject_db');
+define('DB_PORT', 3306);
 
-// Create connection
-$conn = mysqli_connect(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME);
-
-// Check connection
-if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
+// Create connection with basic error handling
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+try {
+    $conn = mysqli_connect(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT);
+    mysqli_set_charset($conn, "utf8mb4");
+} catch (mysqli_sql_exception $e) {
+    die("Database connection failed. Please ensure MySQL is running and credentials are correct. Error: " . $e->getMessage());
 }
-
-// Set charset to UTF-8
-mysqli_set_charset($conn, "utf8mb4");
 
 // Function to escape input for security
 function escapeInput($input)

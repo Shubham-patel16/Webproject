@@ -1,187 +1,167 @@
-// Price Filter, Rating Filter, and Category Filter Functionality
+// Products page filtering and sorting functionality
 document.addEventListener('DOMContentLoaded', function ()
 {
-    const priceFilters=document.querySelectorAll('.price-filter');
-    const ratingFilters=document.querySelectorAll('.rating-filter');
-    const productItems=document.querySelectorAll('.product-item');
-    const productCount=document.getElementById('product-count');
-    const sortSelect=document.querySelector('select[name="sort"]');
-
-    // Only run if we're on the products page
-    if (priceFilters.length===0||productItems.length===0) {
-        return;
+    // Only run on products page
+    if (document.getElementById('products-container')) {
+        initProductFilters();
     }
 
-    // Get selected category from URL or default to 'All'
-    const urlParams=new URLSearchParams(window.location.search);
-    const selectedCategory=urlParams.get('category')?
-        urlParams.get('category').charAt(0).toUpperCase()+urlParams.get('category').slice(1):'All';
+    // Update cart badge on all pages
+    updateCartBadge();
+});
 
-    // Function to filter products based on selected price ranges, ratings, and category
-    function filterProducts()
+function initProductFilters()
+{
+    const productsContainer=document.getElementById('products-container');
+    if (!productsContainer) return;
+
+    const productItems=Array.from(productsContainer.querySelectorAll('.product-item'));
+    const priceFilters=document.querySelectorAll('.price-filter');
+    const ratingFilters=document.querySelectorAll('.rating-filter');
+    const sortSelect=document.getElementById('sort-select');
+    const productCount=document.getElementById('product-count');
+
+    // Store original products for reset
+    const originalProducts=productItems.map(item => ({
+        element: item,
+        price: parseFloat(item.dataset.price)||0,
+        rating: parseInt(item.dataset.rating)||0
+    }));
+
+    // Function to filter and display products
+    function filterAndDisplayProducts()
     {
-        // Get all checked price filters
-        const checkedPriceFilters=Array.from(priceFilters).filter(checkbox => checkbox.checked);
-
-        // Get all checked rating filters
-        const checkedRatingFilters=Array.from(ratingFilters).filter(checkbox => checkbox.checked);
-
-        // If no price filters are checked, hide all products
-        if (checkedPriceFilters.length===0) {
-            productItems.forEach(item =>
-            {
-                item.style.display='none';
-            });
-            if (productCount) {
-                productCount.textContent='0';
+        // Get active price filters
+        const activePriceRanges=[];
+        priceFilters.forEach(filter =>
+        {
+            if (filter.checked) {
+                activePriceRanges.push({
+                    min: parseFloat(filter.dataset.min)||0,
+                    max: parseFloat(filter.dataset.max)||Infinity
+                });
             }
-            return;
-        }
+        });
 
-        // Get price ranges from checked filters
-        const priceRanges=checkedPriceFilters.map(checkbox => ({
-            min: parseFloat(checkbox.getAttribute('data-min')),
-            max: parseFloat(checkbox.getAttribute('data-max'))
-        }));
+        // Get active rating filters
+        const activeRatings=[];
+        ratingFilters.forEach(filter =>
+        {
+            if (filter.checked) {
+                activeRatings.push(parseInt(filter.dataset.rating)||0);
+            }
+        });
 
-        // Get selected ratings
-        const selectedRatings=checkedRatingFilters.map(checkbox =>
-            parseInt(checkbox.getAttribute('data-rating'))
-        );
-
-        let visibleCount=0;
-        const visibleProducts=[];
+        // Get sort option
+        const sortOption=sortSelect? sortSelect.value:'featured';
 
         // Filter products
+        let filteredProducts=originalProducts.filter(product =>
+        {
+            // Price filter
+            const priceMatch=activePriceRanges.length===0||activePriceRanges.some(range =>
+            {
+                return product.price>=range.min&&product.price<=range.max;
+            });
+
+            // Rating filter
+            const ratingMatch=activeRatings.length===0||activeRatings.includes(product.rating);
+
+            return priceMatch&&ratingMatch;
+        });
+
+        // Sort products
+        filteredProducts.sort((a, b) =>
+        {
+            switch (sortOption) {
+                case 'price-low':
+                    return a.price-b.price;
+                case 'price-high':
+                    return b.price-a.price;
+                case 'rating':
+                    return b.rating-a.rating;
+                case 'featured':
+                default:
+                    return 0; // Keep original order
+            }
+        });
+
+        // Hide all products first
         productItems.forEach(item =>
         {
-            const price=parseFloat(item.getAttribute('data-price'));
-            const rating=parseInt(item.getAttribute('data-rating'));
-            const category=item.getAttribute('data-category');
+            item.style.display='none';
+        });
 
-            let priceMatch=false;
-            let ratingMatch=true;
-            let categoryMatch=true;
-
-            // Check if price falls within any of the selected ranges
-            for (let range of priceRanges) {
-                // Handle "Over $1000" case (max is 999999)
-                if (range.max===999999) {
-                    if (price>=range.min) {
-                        priceMatch=true;
-                        break;
-                    }
-                } else {
-                    // For other ranges, check if price is within min (inclusive) and max (exclusive)
-                    if (price>=range.min&&price<range.max) {
-                        priceMatch=true;
-                        break;
-                    }
-                }
-            }
-
-            // Check if rating matches any selected rating (if ratings are selected)
-            if (selectedRatings.length>0) {
-                ratingMatch=selectedRatings.includes(rating);
-            }
-
-            // Check if category matches (if category is not 'All')
-            if (selectedCategory!=='All') {
-                categoryMatch=category===selectedCategory;
-            }
-
-            // Show or hide the product
-            if (priceMatch&&ratingMatch&&categoryMatch) {
-                item.style.display='';
-                visibleCount++;
-                visibleProducts.push(item);
-            } else {
-                item.style.display='none';
-            }
+        // Show filtered and sorted products
+        filteredProducts.forEach(product =>
+        {
+            product.element.style.display='block';
         });
 
         // Update product count
         if (productCount) {
-            productCount.textContent=visibleCount;
+            productCount.textContent=filteredProducts.length;
         }
 
-        // Sort visible products
-        sortProducts(visibleProducts);
-    }
-
-    // Function to sort products
-    function sortProducts(products)
-    {
-        if (!sortSelect) return;
-
-        const sortValue=sortSelect.value;
-        const container=document.getElementById('products-container');
-        if (!container) return;
-
-        // If sorting by featured, don't reorder
-        if (sortValue==='featured') {
-            return;
-        }
-
-        // Sort visible products
-        const sortedProducts=[...products].sort((a, b) =>
-        {
-            switch (sortValue) {
-                case 'price-low':
-                    return parseFloat(a.getAttribute('data-price'))-parseFloat(b.getAttribute('data-price'));
-                case 'price-high':
-                    return parseFloat(b.getAttribute('data-price'))-parseFloat(a.getAttribute('data-price'));
-                case 'rating':
-                    return parseFloat(b.getAttribute('data-rating'))-parseFloat(a.getAttribute('data-rating'));
-                default:
-                    return 0;
+        // Show message if no products found
+        let noResultsMsg=document.getElementById('no-results-message');
+        if (filteredProducts.length===0) {
+            if (!noResultsMsg) {
+                noResultsMsg=document.createElement('div');
+                noResultsMsg.id='no-results-message';
+                noResultsMsg.className='col-12 text-center py-5';
+                noResultsMsg.innerHTML=`
+                    <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="text-muted mb-3">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h4 class="fw-bold mb-2">No products found</h4>
+                    <p class="text-muted">Try adjusting your filters to see more products.</p>
+                `;
+                productsContainer.appendChild(noResultsMsg);
             }
-        });
-
-        // Get all products (visible and hidden)
-        const allProducts=Array.from(productItems);
-        const hiddenProducts=allProducts.filter(p => p.style.display==='none');
-
-        // Remove all products from container
-        allProducts.forEach(product =>
-        {
-            product.remove();
-        });
-
-        // Add sorted visible products first
-        sortedProducts.forEach(product =>
-        {
-            container.appendChild(product);
-        });
-
-        // Add hidden products at the end
-        hiddenProducts.forEach(product =>
-        {
-            container.appendChild(product);
-        });
+            noResultsMsg.style.display='block';
+        } else {
+            if (noResultsMsg) {
+                noResultsMsg.style.display='none';
+            }
+        }
     }
 
-    // Add event listeners to all price filter checkboxes
-    priceFilters.forEach(checkbox =>
+    // Add event listeners to price filters
+    priceFilters.forEach(filter =>
     {
-        checkbox.addEventListener('change', filterProducts);
+        filter.addEventListener('change', filterAndDisplayProducts);
     });
 
-    // Add event listeners to all rating filter checkboxes
-    ratingFilters.forEach(checkbox =>
+    // Add event listener to rating filters
+    ratingFilters.forEach(filter =>
     {
-        checkbox.addEventListener('change', filterProducts);
+        filter.addEventListener('change', filterAndDisplayProducts);
     });
 
     // Add event listener to sort select
     if (sortSelect) {
-        sortSelect.addEventListener('change', function ()
-        {
-            filterProducts();
-        });
+        sortSelect.addEventListener('change', filterAndDisplayProducts);
     }
 
-    // Initial filter on page load
-    filterProducts();
-});
+    // Initial filter (in case some filters are unchecked by default)
+    filterAndDisplayProducts();
+}
 
+// Check if user is logged in (set by PHP in header)
+function isUserLoggedIn()
+{
+    // This will be set by PHP in pages that need it
+    return typeof window.userLoggedIn!=='undefined'? window.userLoggedIn:false;
+}
+
+// Update cart badge function
+function updateCartBadge()
+{
+    const cart=JSON.parse(localStorage.getItem('cart'))||[];
+    const totalItems=cart.reduce((sum, item) => sum+(item.quantity||0), 0);
+    const badge=document.querySelector('.cart-badge');
+    if (badge) {
+        badge.textContent=totalItems;
+    }
+}

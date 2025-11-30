@@ -1,32 +1,20 @@
 <?php
 session_start();
+if (!isset($_SESSION['user'])) {
+    $_SESSION['login_error'] = 'Please login to proceed with checkout.';
+    header('Location: login.php');
+    exit;
+}
+
 $title = "Checkout";
 include 'includes/header.php';
 
-// Get cart from localStorage via JavaScript or session
-// For demo, using sample data
-$cartItems = [
-    [
-        'id' => 1,
-        'name' => 'Gaming Laptop Pro',
-        'price' => 1299.99,
-        'quantity' => 1
-    ],
-    [
-        'id' => 3,
-        'name' => 'Wireless Mouse',
-        'price' => 29.99,
-        'quantity' => 2
-    ]
-];
-
+// Cart will be loaded from localStorage via JavaScript
+$cartItems = [];
 $subtotal = 0;
-foreach ($cartItems as $item) {
-    $subtotal += $item['price'] * $item['quantity'];
-}
-$shipping = $subtotal > 50 ? 0 : 9.99;
-$tax = $subtotal * 0.08;
-$total = $subtotal + $shipping + $tax;
+$shipping = 0;
+$tax = 0;
+$total = 0;
 ?>
 
 <div class="min-vh-100">
@@ -61,7 +49,7 @@ $total = $subtotal + $shipping + $tax;
                         </svg>
                         Shipping Information
                     </h4>
-                    <form id="checkoutForm">
+                    <form id="checkoutForm" action="checkout-process.php" method="POST">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">First Name</label>
@@ -100,6 +88,7 @@ $total = $subtotal + $shipping + $tax;
                                 <input type="text" class="form-control" name="postal" required>
                             </div>
                         </div>
+                        <input type="hidden" name="cart_items" id="cart_items_input">
                     </form>
                 </div>
 
@@ -138,44 +127,30 @@ $total = $subtotal + $shipping + $tax;
                     <h3 class="fw-bold mb-4" style="color: #333;">Order Summary</h3>
                     
                     <!-- Cart Items -->
-                    <div class="mb-4">
-                        <?php foreach ($cartItems as $item): ?>
-                            <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
-                                <div>
-                                    <p class="mb-0 fw-semibold small"><?php echo htmlspecialchars($item['name']); ?></p>
-                                    <p class="mb-0 text-muted small">Qty: <?php echo $item['quantity']; ?></p>
-                                </div>
-                                <span class="fw-semibold">$<?php echo number_format($item['price'] * $item['quantity'], 2); ?></span>
-                            </div>
-                        <?php endforeach; ?>
+                    <div class="mb-4" id="checkout-cart-items">
+                        <p class="text-muted text-center">Loading cart...</p>
                     </div>
                     
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted">Subtotal</span>
-                        <span class="fw-semibold">$<?php echo number_format($subtotal, 2); ?></span>
+                        <span class="fw-semibold" id="checkout-subtotal">$0.00</span>
                     </div>
                     
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted">Shipping</span>
-                        <span class="fw-semibold">
-                            <?php if ($shipping == 0): ?>
-                                <span class="text-success">FREE</span>
-                            <?php else: ?>
-                                $<?php echo number_format($shipping, 2); ?>
-                            <?php endif; ?>
-                        </span>
+                        <span class="fw-semibold" id="checkout-shipping">$0.00</span>
                     </div>
                     
                     <div class="d-flex justify-content-between mb-3">
                         <span class="text-muted">Tax</span>
-                        <span class="fw-semibold">$<?php echo number_format($tax, 2); ?></span>
+                        <span class="fw-semibold" id="checkout-tax">$0.00</span>
                     </div>
                     
                     <div class="border-top pt-3 mb-4">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="fw-bold" style="font-size: 1.2rem; color: #333;">Total</span>
-                            <span class="fw-bold" style="font-size: 1.5rem; color: #667eea;">
-                                $<?php echo number_format($total, 2); ?>
+                            <span class="fw-bold" style="font-size: 1.5rem; color: #667eea;" id="checkout-total">
+                                $0.00
                             </span>
                         </div>
                     </div>
@@ -201,15 +176,60 @@ $total = $subtotal + $shipping + $tax;
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadCheckoutCart();
+});
+
+function loadCheckoutCart() {
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const cartItemsContainer = document.getElementById('checkout-cart-items');
+    
+    if (cart.length === 0) {
+        cartItemsContainer.innerHTML = '<p class="text-muted text-center">Your cart is empty.</p>';
+        return;
+    }
+    
+    let html = '';
+    let subtotal = 0;
+    
+    cart.forEach(item => {
+        const itemTotal = item.price * item.quantity;
+        subtotal += itemTotal;
+        html += `
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                <div>
+                    <p class="mb-0 fw-semibold small">${item.name}</p>
+                    <p class="mb-0 text-muted small">Qty: ${item.quantity}</p>
+                </div>
+                <span class="fw-semibold">$${itemTotal.toFixed(2)}</span>
+            </div>
+        `;
+    });
+    
+    cartItemsContainer.innerHTML = html;
+    
+    const shipping = subtotal > 50 ? 0 : 9.99;
+    const tax = subtotal * 0.08;
+    const total = subtotal + shipping + tax;
+    
+    document.getElementById('checkout-subtotal').textContent = '$' + subtotal.toFixed(2);
+    document.getElementById('checkout-shipping').innerHTML = shipping === 0 ? '<span class="text-success">FREE</span>' : '$' + shipping.toFixed(2);
+    document.getElementById('checkout-tax').textContent = '$' + tax.toFixed(2);
+    document.getElementById('checkout-total').textContent = '$' + total.toFixed(2);
+}
+
 function processCheckout(e) {
     e.preventDefault();
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    
+    if (cart.length === 0) {
+        alert('Your cart is empty. Please add items to your cart before checkout.');
+        return;
+    }
+    
     if (confirm('Are you sure you want to place this order?')) {
-        // In a real application, this would submit to a server
-        alert('Order placed successfully! Thank you for your purchase.');
-        // Clear cart
-        localStorage.removeItem('cart');
-        // Redirect to confirmation page
-        window.location.href = 'index.php';
+        document.getElementById('cart_items_input').value = JSON.stringify(cart);
+        document.getElementById('checkoutForm').submit();
     }
 }
 </script>

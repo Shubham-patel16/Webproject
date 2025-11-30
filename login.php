@@ -1,6 +1,7 @@
 <?php
 session_start();
 $title = "Login";
+$isAdminLogin = isset($_GET['admin']); // same page supports admin sign-in
 include 'includes/header.php';
 
 $error = isset($_SESSION['login_error']) ? $_SESSION['login_error'] : '';
@@ -36,8 +37,16 @@ unset($_SESSION['login_error']);
                                 </svg>
                             </div>
                             <h2 class="fw-bold mb-2" style="color: #333;">Welcome Back</h2>
-                            <p class="text-muted mb-0">Sign in to your account to continue</p>
+                            <p class="text-muted mb-0">
+                                <?php echo $isAdminLogin ? 'Admin access' : 'Sign in to your account to continue'; ?>
+                            </p>
                         </div>
+
+                        <?php if ($isAdminLogin): ?>
+                            <div class="alert alert-info small">
+                                Use your admin credentials to access the dashboard.
+                            </div>
+                        <?php endif; ?>
 
                         <?php if (!empty($error)): ?>
                             <div class="alert alert-danger">
@@ -46,6 +55,9 @@ unset($_SESSION['login_error']);
                         <?php endif; ?>
 
                         <form method="POST" action="login-process.php">
+                            <?php if ($isAdminLogin): ?>
+                                <input type="hidden" name="admin" value="1">
+                            <?php endif; ?>
                             <div class="mb-3">
                                 <label class="form-label fw-semibold" style="color: #333;">Email Address</label>
                                 <div class="input-group">

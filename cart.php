@@ -1,19 +1,15 @@
 <?php
+session_start();
+if (!isset($_SESSION['user'])) {
+    $_SESSION['login_error'] = 'Please login to view your cart.';
+    header('Location: login.php');
+    exit;
+}
+
 $title = "Shopping Cart";
 include 'includes/header.php';
 
 // Cart items will be loaded from localStorage via JavaScript
-// For PHP rendering, we'll use empty array and let JS populate
-$cartItems = [];
-
-// Calculate totals
-$subtotal = 0;
-foreach ($cartItems as $item) {
-    $subtotal += $item['price'] * $item['quantity'];
-}
-$shipping = $subtotal > 50 ? 0 : 9.99;
-$tax = $subtotal * 0.08; // 8% tax
-$total = $subtotal + $shipping + $tax;
 ?>
 
 <div class="min-vh-100">
@@ -250,14 +246,6 @@ function updateOrderSummary(subtotal) {
     }
 }
 
-function updateCartBadge() {
-    const cart = JSON.parse(localStorage.getItem('cart')) || [];
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-    const badge = document.querySelector('.cart-badge');
-    if (badge) {
-        badge.textContent = totalItems;
-    }
-}
 </script>
 
 <?php include 'includes/footer.php'; ?>
