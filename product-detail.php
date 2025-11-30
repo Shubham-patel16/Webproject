@@ -1,4 +1,5 @@
 <?php
+session_start();
 $title = "Product Details";
 include 'includes/header.php';
 
@@ -285,6 +286,16 @@ if (!isset($products[$productId])) {
     }
 
     function addToCart(productId, price, name, image) {
+        // Check if user is logged in
+        const isLoggedIn = <?php echo isset($_SESSION['user']) ? 'true' : 'false'; ?>;
+        
+        if (!isLoggedIn) {
+            if (confirm('You need to login to add items to cart. Would you like to login now?')) {
+                window.location.href = 'login.php';
+            }
+            return;
+        }
+        
         const quantity = parseInt(document.getElementById('quantity').value) || 1;
 
         // Get existing cart from localStorage or create new one
