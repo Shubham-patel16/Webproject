@@ -84,7 +84,6 @@ include 'includes/header.php';
             </div>
         </div>
     </section>
-
     <!-- Mission & Values Section -->
     <section class="py-5 bg-light">
         <div class="container px-4">
@@ -111,7 +110,6 @@ include 'includes/header.php';
                         </p>
                     </div>
                 </div>
-
                 <!-- Values -->
                 <div class="col-lg-6">
                     <div class="bg-white rounded border p-5 h-100">
