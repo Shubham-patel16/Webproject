@@ -30,5 +30,5 @@ Simple PHP/MySQL storefront for browsing products, managing a cart, and checking
    - Use the UI to register/login and browse products; admins can log in to manage catalog and orders.
 
 ## Author
-- Name: Shubham Patel
+- Name: Patel Shubham
 - Student ID: 259638170
