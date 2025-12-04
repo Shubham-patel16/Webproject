@@ -33,11 +33,12 @@ $isAdmin = (isset($_SESSION['admin']) && $_SESSION['admin'] === true) || (isset(
                 </div>
                 <span class="logo-text">Premium Collection</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item">
                         <a class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'products.php') ? 'active' : ''; ?>"
@@ -88,6 +89,12 @@ $isAdmin = (isset($_SESSION['admin']) && $_SESSION['admin'] === true) || (isset(
                             </ul>
                         </li>
                     <?php else: ?>
+                        <li class="nav-item d-lg-none w-100 mt-2">
+                            <div class="d-grid gap-2">
+                                <a href="login.php" class="btn btn-light fw-semibold">Login</a>
+                                <a href="register.php" class="btn btn-warning fw-semibold">Register</a>
+                            </div>
+                        </li>
                         <li class="nav-item d-none d-sm-flex">
                             <div class="auth-buttons d-flex align-items-center gap-2 ms-2">
                                 <a href="login.php" class="btn-signin">Login</a>
