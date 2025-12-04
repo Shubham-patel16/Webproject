@@ -3,53 +3,33 @@ $title = "Home Page";
 include 'includes/header.php';
 require_once 'Database/db.php';
 
-// Default featured products (used as fallback if database is empty/unavailable)
-$featuredProductsFallback = [
-    [
-        'id' => 1,
-        'name' => 'Gaming Laptop Pro',
-        'category' => 'Laptops',
-        'image' => 'images/laptop-1.jpg',
-        'price' => 1299.99,
-        'rating' => 4,
-        'reviews' => 128,
-        'badge' => 'Best Seller'
-    ],
-    [
-        'id' => 5,
-        'name' => 'Graphics Card RTX 4080',
-        'category' => 'Components',
-        'image' => 'images/graphics-card.jpg',
-        'price' => 1199.99,
-        'rating' => 4,
-        'reviews' => 312,
-        'badge' => 'New'
-    ],
-    [
-        'id' => 4,
-        'name' => 'Gaming Keyboard RGB',
-        'category' => 'Gaming',
-        'image' => 'images/keyboard.jpg',
-        'price' => 79.99,
-        'rating' => 3,
-        'reviews' => 203,
-        'badge' => 'Hot'
-    ],
-    [
-        'id' => 3,
-        'name' => 'Wireless Mouse',
-        'category' => 'Accessories',
-        'image' => 'images/mouse.jpg',
-        'price' => 29.99,
-        'rating' => 3,
-        'reviews' => 156,
-        'badge' => 'Value'
-    ]
-];
-
 // Try to pull latest products from the database so the section updates when admins add items
 $featuredProducts = [];
 try {
+    // Discover available columns to build a safe SELECT
+    $availableCols = [];
+    if ($cols = mysqli_query($conn, "SHOW COLUMNS FROM products")) {
+        while ($col = mysqli_fetch_assoc($cols)) {
+            $availableCols[$col['Field']] = true;
+        }
+    }
+    $imageCol = isset($availableCols['image_url']) ? 'image_url' : (isset($availableCols['image']) ? 'image' : '');
+    $stockCol = isset($availableCols['stock']) ? 'stock' : (isset($availableCols['stock_quantity']) ? 'stock_quantity' : '');
+    $ratingCol = isset($availableCols['rating']) ? 'rating' : '';
+    $reviewsCol = isset($availableCols['reviews']) ? 'reviews' : '';
+
+    $selectFields = ['id'];
+    foreach (['name', 'category', 'price'] as $field) {
+        if (isset($availableCols[$field])) {
+            $selectFields[] = $field;
+        }
+    }
+    if ($imageCol) $selectFields[] = $imageCol;
+    if ($stockCol) $selectFields[] = $stockCol;
+    if ($ratingCol) $selectFields[] = $ratingCol;
+    if ($reviewsCol) $selectFields[] = $reviewsCol;
+    $select = implode(', ', $selectFields);
+
     // Check if created_at exists for ordering newest first
     $orderBy = "ORDER BY id DESC";
     $columnsResult = mysqli_query($conn, "SHOW COLUMNS FROM products LIKE 'created_at'");
@@ -57,28 +37,26 @@ try {
         $orderBy = "ORDER BY created_at DESC";
     }
 
-    $result = mysqli_query($conn, "SELECT id, name, category, image_url, price, rating, reviews, stock FROM products $orderBy LIMIT 4");
+    $result = mysqli_query($conn, "SELECT $select FROM products $orderBy LIMIT 4");
     if ($result) {
         while ($row = mysqli_fetch_assoc($result)) {
+            $imageVal = $imageCol && isset($row[$imageCol]) ? $row[$imageCol] : '';
+            $stockVal = $stockCol && isset($row[$stockCol]) ? (int) $row[$stockCol] : 0;
             $featuredProducts[] = [
-                'id' => (int)$row['id'],
+                'id' => (int) $row['id'],
                 'name' => $row['name'] ?? '',
                 'category' => $row['category'] ?? '',
-                'image' => $row['image_url'] ?? '',
-                'price' => isset($row['price']) ? (float)$row['price'] : 0,
-                'rating' => isset($row['rating']) ? (int)$row['rating'] : 4,
-                'reviews' => isset($row['reviews']) ? (int)$row['reviews'] : 0,
+                'image' => $imageVal,
+                'price' => isset($row['price']) ? (float) $row['price'] : 0,
+                'rating' => $ratingCol && isset($row[$ratingCol]) ? (int) $row[$ratingCol] : 4,
+                'reviews' => $reviewsCol && isset($row[$reviewsCol]) ? (int) $row[$reviewsCol] : 0,
                 // Use badge to quickly show availability
-                'badge' => isset($row['stock']) && $row['stock'] > 0 ? 'In Stock' : 'Out of Stock'
+                'badge' => $stockVal > 0 ? 'In Stock' : 'Out of Stock'
             ];
         }
     }
 } catch (Throwable $e) {
     // Ignore and rely on fallback data if DB is unavailable
-}
-
-if (empty($featuredProducts)) {
-    $featuredProducts = $featuredProductsFallback;
 }
 ?>
 
@@ -88,7 +66,7 @@ if (empty($featuredProducts)) {
         <!-- Background Video -->
         <video autoplay muted loop playsinline class="position-absolute top-0 start-0 w-100 h-100"
             style="object-fit: cover; z-index: 0;">
-            <source src="./images/video.mp4" type="video/mp4">
+            <source src="./images/Backgroundvideo.mp4" type="video/mp4">
         </video>
         <!-- Overlay for better text readability -->
         <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark" style="opacity: 0.4; z-index: 1;"></div>
@@ -219,38 +197,39 @@ if (empty($featuredProducts)) {
                     </a>
                 </div>
 
-                <!-- Software -->
+                <!-- Webcams -->
                 <div class="col-6 col-md-4 col-lg-2">
-                    <a href="products.php?category=software" class="text-decoration-none">
+                    <a href="products.php?category=webcams" class="text-decoration-none">
                         <div class="category-card text-center">
                             <div class="category-icon mb-3">
                                 <div class="d-inline-flex align-items-center justify-content-center p-3"
                                     style="width: 70px; height: 70px;">
-                                    <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                        style="color: #667eea;">
+                                    <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #667eea;">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                                            d="M3 8h18v8H3zM12 12.5a1.5 1.5 0 110-3 1.5 1.5 0 010 3zM8 6h8" />
                                     </svg>
                                 </div>
                             </div>
-                            <h3 class="fw-semibold mb-0" style="font-size: 0.95rem;">Software</h3>
+                            <h3 class="fw-semibold mb-0" style="font-size: 0.95rem;">Webcams</h3>
                         </div>
                     </a>
                 </div>
             </div>
         </div>
-        
+
     </section>
 
     <!-- Featured Products Section -->
     <section class="py-5 bg-light">
         <div class="container px-4">
-            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-4">
+            <div
+                class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-4">
                 <div>
                     <h2 class="fw-bold mb-2" style="font-size: 1.75rem;">Featured Products</h2>
                     <p class="text-muted mb-0">Top tech picks for every need</p>
                 </div>
-                <a href="products.php" class="text-decoration-none fw-semibold d-inline-flex align-items-center gap-2" style="color: #667eea;">
+                <a href="products.php" class="text-decoration-none fw-semibold d-inline-flex align-items-center gap-2"
+                    style="color: #667eea;">
                     View All
                     <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -259,43 +238,66 @@ if (empty($featuredProducts)) {
             </div>
 
             <div class="row g-4">
+                <?php if (empty($featuredProducts)): ?>
+                    <div class="col-12">
+                        <div class="bg-white border rounded p-5 text-center">
+                            <h4 class="fw-bold mb-2">No featured products yet</h4>
+                            <p class="text-muted mb-0">Please check back soon.</p>
+                        </div>
+                    </div>
+                <?php else: ?>
                 <?php foreach ($featuredProducts as $product): ?>
                     <div class="col-12 col-sm-6 col-lg-3">
-                        <a href="product-detail.php?id=<?php echo $product['id']; ?>" class="text-decoration-none d-block h-100">
-                            <div class="bg-white rounded border shadow-sm h-100 overflow-hidden" style="transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                        <a href="product-detail.php?id=<?php echo $product['id']; ?>"
+                            class="text-decoration-none d-block h-100">
+                            <div class="bg-white rounded border shadow-sm h-100 overflow-hidden"
+                                style="transition: transform 0.2s ease, box-shadow 0.2s ease;">
                                 <div class="position-relative bg-light" style="height: 200px; overflow: hidden;">
-                                    <img src="<?php echo htmlspecialchars($product['image']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>"
-                                        class="w-100 h-100" style="object-fit: cover; transition: transform 0.3s;"
-                                        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                    <img src="<?php echo htmlspecialchars($product['image']); ?>"
+                                        alt="<?php echo htmlspecialchars($product['name']); ?>" class="w-100 h-100"
+                                        style="object-fit: cover; transition: transform 0.3s;"
+                                        onmouseover="this.style.transform='scale(1.05)'"
+                                        onmouseout="this.style.transform='scale(1)'">
                                     <?php if (!empty($product['badge'])): ?>
-                                        <span class="position-absolute top-0 end-0 m-3 px-3 py-1 rounded-pill fw-semibold" style="background: #eef2ff; color: #4338ca; font-size: 0.8rem;">
+                                        <span class="position-absolute top-0 end-0 m-3 px-3 py-1 rounded-pill fw-semibold"
+                                            style="background: #eef2ff; color: #4338ca; font-size: 0.8rem;">
                                             <?php echo htmlspecialchars($product['badge']); ?>
                                         </span>
                                     <?php endif; ?>
                                 </div>
                                 <div class="p-4">
-                                    <p class="text-muted small mb-2"><?php echo htmlspecialchars($product['category']); ?></p>
-                                    <h3 class="fw-semibold mb-3 text-dark" style="min-height: 48px; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden;"><?php echo htmlspecialchars($product['name']); ?></h3>
+                                    <p class="text-muted small mb-2"><?php echo htmlspecialchars($product['category']); ?>
+                                    </p>
+                                    <h3 class="fw-semibold mb-3 text-dark"
+                                        style="min-height: 48px; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden;">
+                                        <?php echo htmlspecialchars($product['name']); ?>
+                                    </h3>
                                     <div class="d-flex align-items-center gap-2 mb-3">
                                         <div class="d-flex align-items-center gap-1">
-                                            <?php $rating = isset($product['rating']) ? max(0, min(5, (int)$product['rating'])) : 0; ?>
+                                            <?php $rating = isset($product['rating']) ? max(0, min(5, (int) $product['rating'])) : 0; ?>
                                             <?php for ($i = 1; $i <= 5; $i++): ?>
-                                                <svg width="16" height="16" fill="<?php echo $i <= $rating ? '#fbbf24' : 'none'; ?>" stroke="currentColor" viewBox="0 0 24 24" class="<?php echo $i <= $rating ? 'text-warning' : 'text-muted'; ?>">
+                                                <svg width="16" height="16"
+                                                    fill="<?php echo $i <= $rating ? '#fbbf24' : 'none'; ?>"
+                                                    stroke="currentColor" viewBox="0 0 24 24"
+                                                    class="<?php echo $i <= $rating ? 'text-warning' : 'text-muted'; ?>">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                         d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                                                 </svg>
                                             <?php endfor; ?>
                                         </div>
-                                        <span class="text-muted small">(<?php echo isset($product['reviews']) ? (int)$product['reviews'] : 0; ?>)</span>
+                                        <span
+                                            class="text-muted small">(<?php echo isset($product['reviews']) ? (int) $product['reviews'] : 0; ?>)</span>
                                     </div>
                                     <div class="d-flex align-items-baseline justify-content-between">
-                                        <span class="fs-4 fw-bold text-dark">$<?php echo number_format($product['price'], 2); ?></span>
+                                        <span
+                                            class="fs-4 fw-bold text-dark">$<?php echo number_format($product['price'], 2); ?></span>
                                     </div>
                                 </div>
                             </div>
                         </a>
                     </div>
                 <?php endforeach; ?>
+                <?php endif; ?>
             </div>
         </div>
     </section>

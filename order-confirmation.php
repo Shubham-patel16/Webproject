@@ -54,5 +54,14 @@ unset($_SESSION['order_number']);
     </div>
 </div>
 
-<?php include 'includes/footer.php'; ?>
+<script>
+// Clear client cart and refresh badge once confirmation page loads
+document.addEventListener('DOMContentLoaded', function() {
+    localStorage.removeItem('cart');
+    if (typeof updateCartBadge === 'function') {
+        updateCartBadge();
+    }
+});
+</script>
 
+<?php include 'includes/footer.php'; ?>

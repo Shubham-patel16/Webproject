@@ -289,12 +289,12 @@ if ($selectedCategory !== 'All') {
                             data-category="<?php echo htmlspecialchars($product['category']); ?>">
                             <a href="product-detail.php?id=<?php echo $product['id']; ?>" class="text-decoration-none">
                                 <div class="bg-white rounded border overflow-hidden h-100" style="transition: all 0.3s;">
-                                    <div class="position-relative"
-                                        style="height: 150px; background-color: #f8f9fa; overflow: hidden;">
+                                    <div class="position-relative d-flex align-items-center justify-content-center"
+                                        style="height: 170px; background: linear-gradient(135deg, #f8f9fb 0%, #eef1f6 100%); overflow: hidden;">
                                         <img src="<?php echo htmlspecialchars($imageSrc); ?>"
                                             alt="<?php echo htmlspecialchars($product['name']); ?>" class="w-100 h-100"
-                                            style="object-fit: cover; transition: transform 0.3s;"
-                                            onmouseover="this.style.transform='scale(1.1)'"
+                                            style="object-fit: contain; padding: 12px; transition: transform 0.3s ease;"
+                                            onmouseover="this.style.transform='scale(1.04)'"
                                             onmouseout="this.style.transform='scale(1)'"
                                             onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23f1f3f5%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3ENo Image%3C/text%3E%3C/svg%3E';">
                                     </div>

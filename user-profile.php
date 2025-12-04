@@ -15,21 +15,11 @@ unset($_SESSION['success_message']);
 
 // Determine available columns
 $selectFields = "first_name, last_name, email, address, city, state, postal_code, phone, country";
-$usernameExists = false;
 $createdAtExists = false;
-
-if ($columnResult = mysqli_query($conn, "SHOW COLUMNS FROM users LIKE 'username'")) {
-    $usernameExists = mysqli_num_rows($columnResult) > 0;
-    mysqli_free_result($columnResult);
-}
 
 if ($columnResult = mysqli_query($conn, "SHOW COLUMNS FROM users LIKE 'created_at'")) {
     $createdAtExists = mysqli_num_rows($columnResult) > 0;
     mysqli_free_result($columnResult);
-}
-
-if ($usernameExists) {
-    $selectFields .= ", username";
 }
 
 if ($createdAtExists) {
@@ -159,16 +149,6 @@ $formValue = function ($key) use ($userProfile) {
                                 <div class="border rounded p-3 h-100">
                                     <p class="text-muted small mb-1">Email</p>
                                     <p class="fw-semibold mb-0"><?php echo htmlspecialchars($userProfile['email']); ?>
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="border rounded p-3 h-100">
-                                    <p class="text-muted small mb-1">Username</p>
-                                    <p class="fw-semibold mb-0">
-                                        <?php echo $usernameExists && !empty($userProfile['username'])
-                                            ? htmlspecialchars($userProfile['username'])
-                                            : 'Not set'; ?>
                                     </p>
                                 </div>
                             </div>

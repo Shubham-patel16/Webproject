@@ -17,22 +17,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $description = escapeInput($_POST['description']);
     $category = escapeInput($_POST['category']);
     $price = floatval($_POST['price']);
-    $image_url = escapeInput($_POST['image_url']);
     $stock = intval($_POST['stock']);
 
-    $insert_query = "INSERT INTO products (name, category, description, price, stock, image_url) 
-                     VALUES ('$name', '$category', '$description', $price, $stock, '$image_url')";
+    // Handle image: accept upload or URL
+    $image_url = '';
+    $uploadDir = 'images/';
+    $uploadOk = false;
 
-    if (mysqli_query($conn, $insert_query)) {
-        $_SESSION['success_message'] = 'Product added successfully.';
-        header('Location: admin-products.php');
-        exit;
+    if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK) {
+        $allowedExt = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        $fileInfo = pathinfo($_FILES['image_file']['name']);
+        $ext = strtolower($fileInfo['extension'] ?? '');
+        if (in_array($ext, $allowedExt)) {
+            if (!is_dir($uploadDir)) {
+                @mkdir($uploadDir, 0755, true);
+            }
+            $targetName = 'prod_' . uniqid() . '.' . $ext;
+            $targetPath = $uploadDir . $targetName;
+            if (move_uploaded_file($_FILES['image_file']['tmp_name'], $targetPath)) {
+                $image_url = $targetPath;
+                $uploadOk = true;
+            }
+        }
+    }
+
+    if (!$uploadOk) {
+        $image_url = escapeInput($_POST['image_url'] ?? '');
+    }
+
+    // Detect which image column exists
+    $imageColumn = 'image_url';
+    if ($colRes = mysqli_query($conn, "SHOW COLUMNS FROM products LIKE 'image_url'")) {
+        if (mysqli_num_rows($colRes) === 0) {
+            $imageColumn = 'image';
+        }
+        mysqli_free_result($colRes);
+    }
+
+    // Build dynamic insert to support image_url or image column
+    $columns = ['name', 'category', 'description', 'price', 'stock'];
+    $placeholders = ['?', '?', '?', '?', '?'];
+    $types = 'sssdi';
+    $values = [$name, $category, $description, $price, $stock];
+
+    if (!empty($imageColumn)) {
+        $columns[] = $imageColumn;
+        $placeholders[] = '?';
+        $types .= 's';
+        $values[] = $image_url;
+    }
+
+    $columnsSql = implode(', ', $columns);
+    $placeholdersSql = implode(', ', $placeholders);
+
+    $stmt = mysqli_prepare($conn, "INSERT INTO products ($columnsSql) VALUES ($placeholdersSql)");
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, $types, ...$values);
+        if (mysqli_stmt_execute($stmt)) {
+            $_SESSION['success_message'] = 'Product added successfully.';
+            mysqli_stmt_close($stmt);
+            header('Location: admin-products.php');
+            exit;
+        }
+        $error = 'Error adding product: ' . mysqli_stmt_error($stmt);
+        mysqli_stmt_close($stmt);
     } else {
-        $error = 'Error adding product: ' . mysqli_error($conn);
+        $error = 'Error preparing add-product query: ' . mysqli_error($conn);
     }
 }
 
-$categories = ['Laptops', 'Desktops', 'Gaming', 'Accessories', 'Components', 'Software'];
+$categories = ['Laptops', 'Desktops', 'Gaming', 'Accessories', 'Components', 'Webcams'];
 ?>
 
 <div class="min-vh-100" style="background-color: #f8f9fa;">
@@ -54,16 +108,19 @@ $categories = ['Laptops', 'Desktops', 'Gaming', 'Accessories', 'Components', 'So
                             <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
                         <?php endif; ?>
 
-                        <form method="POST" action="">
+                        <form method="POST" action="" enctype="multipart/form-data">
                             <div class="row g-3">
                                 <div class="col-12">
                                     <label class="form-label fw-semibold">Product Name *</label>
-                                    <input type="text" name="name" class="form-control" required>
+                                    <input type="text" name="name" class="form-control" placeholder="e.g. 4K Streaming Webcam" required>
                                 </div>
 
                                 <div class="col-12">
-                                    <label class="form-label fw-semibold">Description *</label>
-                                    <textarea name="description" class="form-control" rows="4" required></textarea>
+                                    <label class="form-label fw-semibold d-flex justify-content-between align-items-center">
+                                        <span>Description *</span>
+                                        <small class="text-muted">Tell customers what makes it great.</small>
+                                    </label>
+                                    <textarea name="description" class="form-control" rows="5" placeholder="Key features, use cases, and specs" required></textarea>
                                 </div>
 
                                 <div class="col-md-6">
@@ -77,8 +134,8 @@ $categories = ['Laptops', 'Desktops', 'Gaming', 'Accessories', 'Components', 'So
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Image URL *</label>
-                                    <input type="text" name="image_url" class="form-control" placeholder="images/product.jpg" required>
+                                    <label class="form-label fw-semibold">Image URL (optional)</label>
+                                    <input type="text" name="image_url" class="form-control" placeholder="images/product.jpg">
                                 </div>
 
                                 <div class="col-md-6">
@@ -110,4 +167,3 @@ $categories = ['Laptops', 'Desktops', 'Gaming', 'Accessories', 'Components', 'So
 </div>
 
 <?php include 'includes/footer.php'; ?>
-

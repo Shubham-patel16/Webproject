@@ -31,28 +31,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $description = escapeInput($_POST['description']);
     $category = escapeInput($_POST['category']);
     $price = floatval($_POST['price']);
-    $image_url = escapeInput($_POST['image_url']);
     $stock = intval($_POST['stock']);
 
-    $update_query = "UPDATE products SET 
-                     name = '$name', 
-                     category = '$category',
-                     description = '$description', 
-                     price = $price, 
-                     stock = $stock, 
-                     image_url = '$image_url'
-                     WHERE id = $product_id";
+    // Image handling: keep existing unless URL provided or new file uploaded
+    $image_url = escapeInput($_POST['image_url'] ?? ($product['image_url'] ?? $product['image'] ?? ''));
+    $uploadDir = 'images/';
 
-    if (mysqli_query($conn, $update_query)) {
-        $_SESSION['success_message'] = 'Product updated successfully.';
-        header('Location: admin-products.php');
-        exit;
+    if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK) {
+        $allowedExt = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        $fileInfo = pathinfo($_FILES['image_file']['name']);
+        $ext = strtolower($fileInfo['extension'] ?? '');
+        if (in_array($ext, $allowedExt)) {
+            if (!is_dir($uploadDir)) {
+                @mkdir($uploadDir, 0755, true);
+            }
+            $targetName = 'prod_' . uniqid() . '.' . $ext;
+            $targetPath = $uploadDir . $targetName;
+            if (move_uploaded_file($_FILES['image_file']['tmp_name'], $targetPath)) {
+                $image_url = $targetPath;
+            }
+        }
+    }
+
+    // Detect which image column exists
+    $imageColumn = 'image_url';
+    if ($colRes = mysqli_query($conn, "SHOW COLUMNS FROM products LIKE 'image_url'")) {
+        if (mysqli_num_rows($colRes) === 0) {
+            $imageColumn = 'image';
+        }
+        mysqli_free_result($colRes);
+    }
+
+    $setClauses = ['name = ?', 'category = ?', 'description = ?', 'price = ?', 'stock = ?'];
+    $types = 'sssdi';
+    $values = [$name, $category, $description, $price, $stock];
+
+    if (!empty($imageColumn)) {
+        $setClauses[] = "$imageColumn = ?";
+        $types .= 's';
+        $values[] = $image_url;
+    }
+
+    $setSql = implode(', ', $setClauses);
+    $stmt = mysqli_prepare($conn, "UPDATE products SET $setSql WHERE id = ?");
+    if ($stmt) {
+        $types .= 'i';
+        $values[] = $product_id;
+        mysqli_stmt_bind_param($stmt, $types, ...$values);
+        if (mysqli_stmt_execute($stmt)) {
+            $_SESSION['success_message'] = 'Product updated successfully.';
+            mysqli_stmt_close($stmt);
+            header('Location: admin-products.php');
+            exit;
+        }
+        $error = 'Error updating product: ' . mysqli_stmt_error($stmt);
+        mysqli_stmt_close($stmt);
     } else {
-        $error = 'Error updating product: ' . mysqli_error($conn);
+        $error = 'Error preparing update query: ' . mysqli_error($conn);
     }
 }
 
-$categories = ['Laptops', 'Desktops', 'Gaming', 'Accessories', 'Components', 'Software'];
+$categories = ['Laptops', 'Desktops', 'Gaming', 'Accessories', 'Components', 'Webcams'];
 ?>
 
 <div class="min-vh-100" style="background-color: #f8f9fa;">
@@ -74,7 +113,7 @@ $categories = ['Laptops', 'Desktops', 'Gaming', 'Accessories', 'Components', 'So
                             <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
                         <?php endif; ?>
 
-                        <form method="POST" action="">
+                        <form method="POST" action="" enctype="multipart/form-data">
                             <div class="row g-3">
                                 <div class="col-12">
                                     <label class="form-label fw-semibold">Product Name *</label>
@@ -82,8 +121,11 @@ $categories = ['Laptops', 'Desktops', 'Gaming', 'Accessories', 'Components', 'So
                                 </div>
 
                                 <div class="col-12">
-                                    <label class="form-label fw-semibold">Description *</label>
-                                    <textarea name="description" class="form-control" rows="4" required><?php echo htmlspecialchars($product['description']); ?></textarea>
+                                    <label class="form-label fw-semibold d-flex justify-content-between align-items-center">
+                                        <span>Description *</span>
+                                        <small class="text-muted">Keep it concise but helpful.</small>
+                                    </label>
+                                    <textarea name="description" class="form-control" rows="5" required><?php echo htmlspecialchars($product['description']); ?></textarea>
                                 </div>
 
                                 <div class="col-md-6">
@@ -99,8 +141,8 @@ $categories = ['Laptops', 'Desktops', 'Gaming', 'Accessories', 'Components', 'So
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Image URL *</label>
-                                    <input type="text" name="image_url" class="form-control" value="<?php echo htmlspecialchars($product['image_url'] ?? ''); ?>" required>
+                                    <label class="form-label fw-semibold">Image URL (optional)</label>
+                                    <input type="text" name="image_url" class="form-control" value="<?php echo htmlspecialchars($product['image_url'] ?? $product['image'] ?? ''); ?>">
                                 </div>
 
                                 <div class="col-md-6">
@@ -132,4 +174,3 @@ $categories = ['Laptops', 'Desktops', 'Gaming', 'Accessories', 'Components', 'So
 </div>
 
 <?php include 'includes/footer.php'; ?>
-

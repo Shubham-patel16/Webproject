@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 $isLoggedIn = isset($_SESSION['user']);
-$isAdmin = isset($_SESSION['admin']) && $_SESSION['admin'] === true;
+$isAdmin = (isset($_SESSION['admin']) && $_SESSION['admin'] === true) || (isset($_SESSION['admin_user']) && !empty($_SESSION['admin_user']));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -61,20 +61,15 @@ $isAdmin = isset($_SESSION['admin']) && $_SESSION['admin'] === true;
                         </a>
                     </li>
                     <?php if ($isAdmin): ?>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle <?php echo (basename($_SERVER['PHP_SELF']) == 'admin-dashboard.php') ? 'active' : ''; ?>"
-                                href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Admin
+                        <li class="nav-item">
+                            <a class="nav-link ms-lg-2 px-3 py-2 text-white fw-semibold <?php echo (basename($_SERVER['PHP_SELF']) == 'admin-dashboard.php') ? 'active' : ''; ?>"
+                               href="admin-dashboard.php"
+                               style="border-radius: 999px; box-shadow: 0 6px 18px rgba(79, 70, 229, 0.25); display: inline-flex; align-items: center; gap: 8px;">
+                                Admin Dashboard
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item" href="admin-dashboard.php">Dashboard</a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <a class="dropdown-item" href="admin-logout.php">Logout</a>
-                                </li>
-                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="admin-logout.php">Logout</a>
                         </li>
                     <?php elseif ($isLoggedIn): ?>
                         <li class="nav-item dropdown">

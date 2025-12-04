@@ -1,54 +1,62 @@
 <?php
 $title = "Deals";
+require_once 'Database/db.php';
 include 'includes/header.php';
 
-// Sample sale products data
-$saleProducts = [
-    [
-        'id' => 1,
-        'name' => 'Gaming Laptop Pro',
-        'category' => 'Laptops',
-        'image' => 'images/laptop-1.jpg',
-        'price' => 999.99,
-        'originalPrice' => 1299.99,
-        'discount' => 23,
-        'rating' => 4,
-        'reviews' => 128
-    ],
-    [
-        'id' => 2,
-        'name' => 'Desktop Workstation',
-        'category' => 'Desktops',
-        'image' => 'images/desktop-1.jpg',
-        'price' => 699.99,
-        'originalPrice' => 899.99,
-        'discount' => 22,
-        'rating' => 4,
-        'reviews' => 89
-    ],
-    [
-        'id' => 3,
-        'name' => 'Wireless Mouse',
-        'category' => 'Accessories',
-        'image' => 'images/mouse.jpg',
-        'price' => 19.99,
-        'originalPrice' => 29.99,
-        'discount' => 33,
-        'rating' => 3,
-        'reviews' => 156
-    ],
-    [
-        'id' => 4,
-        'name' => 'Gaming Keyboard RGB',
-        'category' => 'Gaming',
-        'image' => 'images/keyboard.jpg',
-        'price' => 59.99,
-        'originalPrice' => 79.99,
-        'discount' => 25,
-        'rating' => 3,
-        'reviews' => 203
-    ]
-];
+// Pull products from DB to show deals (newest first)
+$saleProducts = [];
+try {
+    $availableCols = [];
+    if ($cols = mysqli_query($conn, "SHOW COLUMNS FROM products")) {
+        while ($col = mysqli_fetch_assoc($cols)) {
+            $availableCols[$col['Field']] = true;
+        }
+    }
+    $imageCol = isset($availableCols['image_url']) ? 'image_url' : (isset($availableCols['image']) ? 'image' : '');
+    $ratingCol = isset($availableCols['rating']) ? 'rating' : '';
+    $reviewsCol = isset($availableCols['reviews']) ? 'reviews' : '';
+    $discountCol = isset($availableCols['discount']) ? 'discount' : '';
+    $originalCol = isset($availableCols['original_price']) ? 'original_price' : '';
+
+    $selectFields = ['id'];
+    foreach (['name', 'category', 'price'] as $field) {
+        if (isset($availableCols[$field])) $selectFields[] = $field;
+    }
+    if ($imageCol) $selectFields[] = $imageCol;
+    if ($ratingCol) $selectFields[] = $ratingCol;
+    if ($reviewsCol) $selectFields[] = $reviewsCol;
+    if ($discountCol) $selectFields[] = $discountCol;
+    if ($originalCol) $selectFields[] = $originalCol;
+    $select = implode(', ', $selectFields);
+
+    $orderBy = "ORDER BY id DESC";
+    $columnsResult = mysqli_query($conn, "SHOW COLUMNS FROM products LIKE 'created_at'");
+    if ($columnsResult && mysqli_num_rows($columnsResult) > 0) {
+        $orderBy = "ORDER BY created_at DESC";
+    }
+
+    $result = mysqli_query($conn, "SELECT $select FROM products $orderBy LIMIT 12");
+    if ($result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $imageVal = $imageCol && !empty($row[$imageCol]) ? $row[$imageCol] : 'data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"400\" height=\"300\"%3E%3Crect fill=\"%23f1f3f5\" width=\"400\" height=\"300\"/%3E%3Ctext x=\"50%25\" y=\"50%25\" text-anchor=\"middle\" dy=\".3em\" fill=\"%23999\"%3ENo Image%3C/text%3E%3C/svg%3E';
+            $discountVal = $discountCol && isset($row[$discountCol]) ? (int)$row[$discountCol] : 0;
+            $originalVal = $originalCol && isset($row[$originalCol]) ? (float)$row[$originalCol] : null;
+            $saleProducts[] = [
+                'id' => (int)$row['id'],
+                'name' => $row['name'] ?? 'Product',
+                'category' => $row['category'] ?? 'Category',
+                'image' => $imageVal,
+                'price' => isset($row['price']) ? (float)$row['price'] : 0,
+                'discount' => $discountVal,
+                'originalPrice' => $originalVal,
+                'rating' => $ratingCol && isset($row[$ratingCol]) ? (int)$row[$ratingCol] : 4,
+                'reviews' => $reviewsCol && isset($row[$reviewsCol]) ? (int)$row[$reviewsCol] : 0
+            ];
+        }
+    }
+} catch (Throwable $e) {
+    // ignore and fallback to empty
+}
 ?>
 
 <div class="min-vh-100">
@@ -83,6 +91,14 @@ $saleProducts = [
     <!-- Products Grid -->
     <div class="container px-4 py-5">
         <div class="row g-4">
+            <?php if (empty($saleProducts)): ?>
+                <div class="col-12">
+                    <div class="bg-white border rounded p-5 text-center">
+                        <h3 class="fw-bold mb-2">No deals available</h3>
+                        <p class="text-muted mb-0">Please check back later.</p>
+                    </div>
+                </div>
+            <?php else: ?>
             <?php foreach ($saleProducts as $product): ?>
                 <div class="col-12 col-sm-6 col-lg-3">
                     <a href="product-detail.php?id=<?php echo $product['id']; ?>" class="text-decoration-none">
@@ -92,10 +108,12 @@ $saleProducts = [
                             onmouseout="this.style.boxShadow=''; this.style.borderColor='';">
 
                             <!-- Discount Badge -->
-                            <div class="position-absolute top-0 end-0 m-3"
-                                style="background-color: #dc3545; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 1.1rem; z-index: 10; box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);">
-                                -<?php echo $product['discount']; ?>%
-                            </div>
+                            <?php if (!empty($product['discount'])): ?>
+                                <div class="position-absolute top-0 end-0 m-3"
+                                    style="background-color: #dc3545; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 1.1rem; z-index: 10; box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);">
+                                    -<?php echo (int)$product['discount']; ?>%
+                                </div>
+                            <?php endif; ?>
 
                             <!-- Product Image -->
                             <div class="position-relative"
@@ -141,14 +159,16 @@ $saleProducts = [
                                 <div class="d-flex align-items-baseline gap-2">
                                     <span class="fs-4 fw-bold"
                                         style="color: #333;">$<?php echo number_format($product['price'], 2); ?></span>
-                                    <span
-                                        class="text-muted small text-decoration-line-through">$<?php echo number_format($product['originalPrice'], 2); ?></span>
+                                    <?php if (!empty($product['originalPrice'])): ?>
+                                        <span class="text-muted small text-decoration-line-through">$<?php echo number_format($product['originalPrice'], 2); ?></span>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
                     </a>
                 </div>
             <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </div>
 </div>
