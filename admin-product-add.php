@@ -11,6 +11,31 @@ if (!isset($_SESSION['admin']) || $_SESSION['admin'] !== true) {
 $title = "Add Product";
 include 'includes/header.php';
 
+// Ensure deal columns exist so admins can set discounts
+function ensureDealColumns($conn): array
+{
+    $hasDiscount = false;
+    $hasOriginal = false;
+    if ($cols = mysqli_query($conn, "SHOW COLUMNS FROM products")) {
+        while ($col = mysqli_fetch_assoc($cols)) {
+            if ($col['Field'] === 'discount') $hasDiscount = true;
+            if ($col['Field'] === 'original_price') $hasOriginal = true;
+        }
+        mysqli_free_result($cols);
+    }
+    if (!$hasDiscount) {
+        @mysqli_query($conn, "ALTER TABLE products ADD COLUMN discount INT DEFAULT 0");
+        $hasDiscount = true;
+    }
+    if (!$hasOriginal) {
+        @mysqli_query($conn, "ALTER TABLE products ADD COLUMN original_price DECIMAL(10,2) NULL");
+        $hasOriginal = true;
+    }
+    return [$hasDiscount, $hasOriginal];
+}
+
+[$hasDiscountCol, $hasOriginalCol] = ensureDealColumns($conn);
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = escapeInput($_POST['name']);
@@ -18,6 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $category = escapeInput($_POST['category']);
     $price = floatval($_POST['price']);
     $stock = intval($_POST['stock']);
+    $discount = isset($_POST['discount']) ? (int)$_POST['discount'] : 0;
+    $originalPrice = isset($_POST['original_price']) && $_POST['original_price'] !== '' ? (float)$_POST['original_price'] : null;
 
     // Handle image: accept upload or URL
     $image_url = '';
@@ -65,6 +92,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $placeholders[] = '?';
         $types .= 's';
         $values[] = $image_url;
+    }
+
+    if ($hasDiscountCol) {
+        $columns[] = 'discount';
+        $placeholders[] = '?';
+        $types .= 'i';
+        $values[] = $discount;
+    }
+
+    if ($hasOriginalCol) {
+        $columns[] = 'original_price';
+        $placeholders[] = '?';
+        $types .= 'd';
+        $values[] = $originalPrice !== null ? $originalPrice : null;
     }
 
     $columnsSql = implode(', ', $columns);
@@ -148,6 +189,20 @@ $categories = ['Laptops', 'Desktops', 'Gaming', 'Accessories', 'Webcams'];
                                     <input type="number" name="stock" class="form-control" min="0" required>
                                 </div>
 
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Discount % (optional)</label>
+                                    <input type="number" name="discount" class="form-control" min="0" max="90" placeholder="e.g. 15">
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Original Price (optional)</label>
+                                    <input type="number" step="0.01" name="original_price" class="form-control" placeholder="e.g. 1299.00">
+                                </div>
+
+                                <div class="col-12">
+                                    <small class="text-muted" id="deal-price-preview">Final price after discount: $0.00</small>
+                                </div>
+
                                 <div class="col-12 mt-4">
                                     <button type="submit" class="btn btn-primary">
                                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="d-inline-block me-1">
@@ -167,3 +222,34 @@ $categories = ['Laptops', 'Desktops', 'Gaming', 'Accessories', 'Webcams'];
 </div>
 
 <?php include 'includes/footer.php'; ?>
+<script>
+(function() {
+    const priceInput = document.querySelector('input[name="price"]');
+    const discountInput = document.querySelector('input[name="discount"]');
+    const originalInput = document.querySelector('input[name="original_price"]');
+    const helper = document.getElementById('deal-price-preview');
+
+    function toNum(val) {
+        const num = parseFloat(val);
+        return Number.isFinite(num) ? num : 0;
+    }
+
+    function updatePreview() {
+        if (!priceInput || !discountInput || !originalInput || !helper) return;
+        const price = toNum(priceInput.value);
+        const discount = toNum(discountInput.value);
+        const original = toNum(originalInput.value);
+        const base = original > 0 ? original : price;
+        const final = base * (1 - (discount > 0 ? discount / 100 : 0));
+        const display = final > 0 ? final : price;
+        helper.textContent = 'Final price after discount: $' + display.toFixed(2);
+    }
+
+    ['input', 'change'].forEach(evt => {
+        priceInput?.addEventListener(evt, updatePreview);
+        discountInput?.addEventListener(evt, updatePreview);
+        originalInput?.addEventListener(evt, updatePreview);
+    });
+    updatePreview();
+})();
+</script>

@@ -85,6 +85,8 @@ try {
     $stockCol = isset($availableCols['stock']) ? 'stock' : (isset($availableCols['stock_quantity']) ? 'stock_quantity' : '');
     $ratingCol = isset($availableCols['rating']) ? 'rating' : '';
     $reviewsCol = isset($availableCols['reviews']) ? 'reviews' : '';
+    $discountCol = isset($availableCols['discount']) ? 'discount' : '';
+    $originalCol = isset($availableCols['original_price']) ? 'original_price' : '';
 
     $selectFields = ['id'];
     foreach (['name', 'category', 'description', 'price'] as $field) {
@@ -94,6 +96,8 @@ try {
     if ($stockCol) $selectFields[] = $stockCol;
     if ($ratingCol) $selectFields[] = $ratingCol;
     if ($reviewsCol) $selectFields[] = $reviewsCol;
+    if ($discountCol) $selectFields[] = $discountCol;
+    if ($originalCol) $selectFields[] = $originalCol;
     $select = implode(', ', $selectFields);
 
     $stmt = mysqli_prepare($conn, "SELECT $select FROM products WHERE id = ? LIMIT 1");
@@ -110,12 +114,20 @@ try {
             }
             $imageVal = normalizeProductImageDetail($imageValRaw);
             $stockVal = $stockCol && isset($row[$stockCol]) ? (int)$row[$stockCol] : 0;
+            $discountVal = $discountCol && isset($row[$discountCol]) ? (int)$row[$discountCol] : 0;
+            $originalVal = $originalCol && isset($row[$originalCol]) ? (float)$row[$originalCol] : null;
+            $basePrice = $originalVal && $originalVal > 0 ? $originalVal : (isset($row['price']) ? (float)$row['price'] : 0);
+            $finalPrice = $discountVal > 0 ? $basePrice * (1 - $discountVal / 100) : (isset($row['price']) ? (float)$row['price'] : 0);
             $product = [
                 'id' => (int)$row['id'],
                 'name' => $row['name'] ?? 'Product',
                 'category' => $row['category'] ?? 'Category',
                 'description' => $row['description'] ?? 'No description available.',
                 'price' => isset($row['price']) ? (float)$row['price'] : 0,
+                'price_base' => $basePrice,
+                'price_final' => $finalPrice,
+                'discount' => $discountVal,
+                'original_price' => $originalVal,
                 'image' => $imageVal,
                 'rating' => $ratingCol && isset($row[$ratingCol]) ? (int)$row[$ratingCol] : 4,
                 'reviews' => $reviewsCol && isset($row[$reviewsCol]) ? (int)$row[$reviewsCol] : 0,
@@ -140,12 +152,20 @@ if (!$product && $productId > 0) {
         }
         $imageVal = normalizeProductImageDetail($imageVal);
         $stockVal = isset($row['stock']) ? (int)$row['stock'] : (isset($row['stock_quantity']) ? (int)$row['stock_quantity'] : 0);
+        $discountVal = isset($row['discount']) ? (int)$row['discount'] : 0;
+        $originalVal = isset($row['original_price']) ? (float)$row['original_price'] : null;
+        $basePrice = $originalVal && $originalVal > 0 ? $originalVal : (isset($row['price']) ? (float)$row['price'] : 0);
+        $finalPrice = $discountVal > 0 ? $basePrice * (1 - $discountVal / 100) : (isset($row['price']) ? (float)$row['price'] : 0);
         $product = [
             'id' => (int)($row['id'] ?? $productId),
             'name' => $row['name'] ?? 'Product',
             'category' => $row['category'] ?? 'Category',
             'description' => $row['description'] ?? 'No description available.',
             'price' => isset($row['price']) ? (float)$row['price'] : 0,
+            'price_base' => $basePrice,
+            'price_final' => $finalPrice,
+            'discount' => $discountVal,
+            'original_price' => $originalVal,
             'image' => $imageVal,
             'rating' => isset($row['rating']) ? (int)$row['rating'] : 4,
             'reviews' => isset($row['reviews']) ? (int)$row['reviews'] : 0,
@@ -158,34 +178,7 @@ if (!$product && $productId > 0) {
 }
 
 if (!$product) {
-    ?>
-    <div class="min-vh-100">
-        <div class="bg-light border-bottom">
-            <div class="container px-4 py-3">
-                <div class="d-flex align-items-center gap-2" style="font-size: 0.875rem;">
-                    <a href="index.php" class="text-decoration-none" style="color: #667eea;">Home</a>
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="text-muted">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                    <a href="products.php" class="text-decoration-none" style="color: #667eea;">Products</a>
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="text-muted">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                    <span class="text-dark fw-medium">Product Not Found</span>
-                </div>
-            </div>
-        </div>
-        <div class="container px-4 py-5">
-            <div class="bg-white rounded border p-4 text-center">
-                <h2 class="fw-bold mb-3">Product not found</h2>
-                <p class="text-muted mb-4">
-                    The product you are looking for does not exist or has been removed.
-                    <?php if (!empty($productError)) echo '<br><small class="text-danger">' . htmlspecialchars($productError) . '</small>'; ?>
-                </p>
-                <a href="products.php" class="btn btn-primary">Back to Products</a>
-            </div>
-        </div>
-    </div>
+    ?>  
     <?php
     include 'includes/footer.php';
     exit;
@@ -419,7 +412,10 @@ if (ensureReviewsTable($conn)) {
                 <!-- Price -->
                 <div class="price-tile mb-4">
                     <div class="d-flex align-items-baseline gap-3 mb-1">
-                        <span class="display-6 fw-bold" style="color: #667eea;">$<?php echo number_format($product['price'], 2); ?></span>
+                        <span class="display-6 fw-bold" style="color: #667eea;">$<?php echo number_format($product['price_final'] ?? $product['price'], 2); ?></span>
+                        <?php if (!empty($product['price_base']) && ($product['price_base'] > ($product['price_final'] ?? $product['price']))): ?>
+                            <span class="text-muted small text-decoration-line-through">$<?php echo number_format($product['price_base'], 2); ?></span>
+                        <?php endif; ?>
                         <span class="text-muted small">VAT included</span>
                     </div>
                     <?php if ($product['inStock']): ?>
@@ -459,7 +455,7 @@ if (ensureReviewsTable($conn)) {
                         </div>
                     </div>
                     <button class="btn btn-primary btn-lg w-100 mb-2"
-                        onclick="addToCart(<?php echo $product['id']; ?>, <?php echo $product['price']; ?>, '<?php echo htmlspecialchars($product['name']); ?>', '<?php echo $product['image']; ?>')"
+                        onclick="addToCart(<?php echo $product['id']; ?>, <?php echo $product['price_final'] ?? $product['price']; ?>, '<?php echo htmlspecialchars($product['name']); ?>', '<?php echo $product['image']; ?>', <?php echo $product['price_base'] ?? $product['price']; ?>)"
                         style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;"
                         <?php echo !$product['inStock'] ? 'disabled' : ''; ?>>
                         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="d-inline me-2">
@@ -558,7 +554,7 @@ if (ensureReviewsTable($conn)) {
         input.value = currentQty;
     }
 
-    function addToCart(productId, price, name, image) {
+    function addToCart(productId, price, name, image, originalPrice) {
         // Check if user is logged in
         const isLoggedIn = <?php echo isset($_SESSION['user']) ? 'true' : 'false'; ?>;
         
@@ -578,11 +574,14 @@ if (ensureReviewsTable($conn)) {
         const existingItem = cart.find(item => item.id === productId);
         if (existingItem) {
             existingItem.quantity += quantity;
+            existingItem.price = price; // ensure latest discount
+            existingItem.originalPrice = originalPrice || 0;
         } else {
             cart.push({
                 id: productId,
                 name: name,
                 price: price,
+                originalPrice: originalPrice || 0,
                 image: image,
                 quantity: quantity
             });

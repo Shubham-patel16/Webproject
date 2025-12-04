@@ -17,7 +17,7 @@ $isAdmin = (isset($_SESSION['admin']) && $_SESSION['admin'] === true) || (isset(
     <link rel="stylesheet" href="css/style.css">
     <script>
         // Set login status for JavaScript
-        window.userLoggedIn = <?php echo $isLoggedIn ? 'true' : 'false'; ?>;
+        window.userLoggedIn=<?php echo $isLoggedIn ? 'true' : 'false'; ?>;
     </script>
 </head>
 
@@ -36,7 +36,14 @@ $isAdmin = (isset($_SESSION['admin']) && $_SESSION['admin'] === true) || (isset(
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                 data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
                 aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
+
+                <!-- Custom SVG Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav ms-auto align-items-center">
@@ -64,8 +71,8 @@ $isAdmin = (isset($_SESSION['admin']) && $_SESSION['admin'] === true) || (isset(
                     <?php if ($isAdmin): ?>
                         <li class="nav-item">
                             <a class="nav-link ms-lg-2 px-3 py-2 text-white fw-semibold <?php echo (basename($_SERVER['PHP_SELF']) == 'admin-dashboard.php') ? 'active' : ''; ?>"
-                               href="admin-dashboard.php"
-                               style="border-radius: 999px; box-shadow: 0 6px 18px rgba(79, 70, 229, 0.25); display: inline-flex; align-items: center; gap: 8px;">
+                                href="admin-dashboard.php"
+                                style="border-radius: 999px; box-shadow: 0 6px 18px rgba(79, 70, 229, 0.25); display: inline-flex; align-items: center; gap: 8px;">
                                 Admin Dashboard
                             </a>
                         </li>
@@ -82,7 +89,9 @@ $isAdmin = (isset($_SESSION['admin']) && $_SESSION['admin'] === true) || (isset(
                                 <li>
                                     <a class="dropdown-item" href="user-profile.php">My Profile</a>
                                 </li>
-                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
                                 <li>
                                     <a class="dropdown-item" href="logout.php">Logout</a>
                                 </li>

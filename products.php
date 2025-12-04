@@ -73,6 +73,8 @@ try {
     $stockCol = isset($availableCols['stock']) ? 'stock' : (isset($availableCols['stock_quantity']) ? 'stock_quantity' : '');
     $ratingCol = isset($availableCols['rating']) ? 'rating' : '';
     $reviewsCol = isset($availableCols['reviews']) ? 'reviews' : '';
+    $discountCol = isset($availableCols['discount']) ? 'discount' : '';
+    $originalCol = isset($availableCols['original_price']) ? 'original_price' : '';
 
     $selectFields = ['id'];
     foreach (['name', 'category', 'description', 'price'] as $field) {
@@ -88,6 +90,10 @@ try {
         $selectFields[] = $ratingCol;
     if ($reviewsCol)
         $selectFields[] = $reviewsCol;
+    if ($discountCol)
+        $selectFields[] = $discountCol;
+    if ($originalCol)
+        $selectFields[] = $originalCol;
     $select = implode(', ', $selectFields);
 
     $orderBy = "ORDER BY id DESC";
@@ -107,12 +113,20 @@ try {
             }
             $imageVal = normalizeProductImage($imageVal);
             $stockVal = $stockCol && isset($row[$stockCol]) ? (int) $row[$stockCol] : 0;
+            $discountVal = $discountCol && isset($row[$discountCol]) ? (int) $row[$discountCol] : 0;
+            $originalVal = $originalCol && isset($row[$originalCol]) ? (float) $row[$originalCol] : null;
+            $basePrice = $originalVal !== null && $originalVal > 0 ? $originalVal : (isset($row['price']) ? (float)$row['price'] : 0);
+            $finalPrice = $discountVal > 0 ? $basePrice * (1 - $discountVal / 100) : (isset($row['price']) ? (float)$row['price'] : 0);
             $productsList[] = [
                 'id' => (int) $row['id'],
                 'name' => $row['name'] ?? 'Untitled Product',
                 'category' => $row['category'] ?? 'Misc',
                 'description' => $row['description'] ?? '',
                 'price' => isset($row['price']) ? (float) $row['price'] : 0,
+                'basePrice' => $basePrice,
+                'finalPrice' => $finalPrice,
+                'discount' => $discountVal,
+                'originalPrice' => $originalVal,
                 'stock' => $stockVal,
                 'image' => $imageVal,
                 'rating' => $ratingCol && isset($row[$ratingCol]) ? (int) $row[$ratingCol] : 4,
@@ -137,12 +151,20 @@ if (empty($productsList)) {
             }
             $imageVal = normalizeProductImage($imageVal);
             $stockVal = isset($row['stock']) ? (int) $row['stock'] : (isset($row['stock_quantity']) ? (int) $row['stock_quantity'] : 0);
+            $discountVal = isset($row['discount']) ? (int)$row['discount'] : 0;
+            $originalVal = isset($row['original_price']) ? (float)$row['original_price'] : null;
+            $basePrice = $originalVal !== null && $originalVal > 0 ? $originalVal : (isset($row['price']) ? (float)$row['price'] : 0);
+            $finalPrice = $discountVal > 0 ? $basePrice * (1 - $discountVal / 100) : (isset($row['price']) ? (float)$row['price'] : 0);
             $productsList[] = [
                 'id' => (int) ($row['id'] ?? 0),
                 'name' => $row['name'] ?? 'Untitled Product',
                 'category' => $row['category'] ?? 'Misc',
                 'description' => $row['description'] ?? '',
                 'price' => isset($row['price']) ? (float) $row['price'] : 0,
+                'basePrice' => $basePrice,
+                'finalPrice' => $finalPrice,
+                'discount' => $discountVal,
+                'originalPrice' => $originalVal,
                 'stock' => $stockVal,
                 'image' => $imageVal,
                 'rating' => isset($row['rating']) ? (int) $row['rating'] : 4,
@@ -262,20 +284,24 @@ if ($selectedCategory !== 'All') {
                         $imageSrc = !empty($product['image']) ? $product['image'] : 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23f1f3f5" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999"%3ENo Image%3C/text%3E%3C/svg%3E';
                         $rating = isset($product['rating']) ? max(0, min(5, (int) $product['rating'])) : 0;
                         $reviews = isset($product['reviews']) ? (int) $product['reviews'] : 0;
+                        $hasDiscount = !empty($product['discount']);
+                        $finalPrice = isset($product['finalPrice']) ? (float)$product['finalPrice'] : (isset($product['price']) ? (float)$product['price'] : 0);
+                        $basePrice = isset($product['basePrice']) ? (float)$product['basePrice'] : (isset($product['price']) ? (float)$product['price'] : 0);
                         ?>
                         <div class="col-12 col-sm-6 col-lg-4 product-item"
                             data-price="<?php echo htmlspecialchars($product['price']); ?>"
                             data-rating="<?php echo $rating; ?>"
                             data-category="<?php echo htmlspecialchars($product['category']); ?>">
                             <a href="product-detail.php?id=<?php echo $product['id']; ?>" class="text-decoration-none">
-                                <div class="bg-white rounded border overflow-hidden h-100" style="transition: all 0.3s;">
+                                <div class="bg-white rounded border overflow-hidden h-100 product-card" style="transition: all 0.3s;">
                                     <div class="position-relative d-flex align-items-center justify-content-center"
                                         style="height: 170px; background: linear-gradient(135deg, #f8f9fb 0%, #eef1f6 100%); overflow: hidden;">
+                                        <?php if ($hasDiscount): ?>
+                                            <span class="position-absolute top-0 start-0 m-3 badge bg-danger">-<?php echo (int)$product['discount']; ?>%</span>
+                                        <?php endif; ?>
                                         <img src="<?php echo htmlspecialchars($imageSrc); ?>"
                                             alt="<?php echo htmlspecialchars($product['name']); ?>" class="w-100 h-100"
-                                            style="object-fit: contain; padding: 12px; transition: transform 0.3s ease;"
-                                            onmouseover="this.style.transform='scale(1.04)'"
-                                            onmouseout="this.style.transform='scale(1)'"
+                                            style="object-fit: contain; padding: 12px;"
                                             onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23f1f3f5%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3ENo Image%3C/text%3E%3C/svg%3E';">
                                     </div>
                                     <div class="p-4">
@@ -302,7 +328,10 @@ if ($selectedCategory !== 'All') {
                                         </div>
                                         <div class="d-flex align-items-baseline justify-content-between">
                                             <span class="fs-4 fw-bold"
-                                                style="color: #333;">$<?php echo number_format($product['price'], 2); ?></span>
+                                                style="color: #333;">$<?php echo number_format($finalPrice, 2); ?></span>
+                                            <?php if ($hasDiscount && $basePrice > $finalPrice): ?>
+                                                <span class="text-muted text-decoration-line-through">$<?php echo number_format($basePrice, 2); ?></span>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 </div>

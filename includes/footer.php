@@ -36,11 +36,6 @@
                     </ul>
                 </div>
             </div>
-            <div class="border-top pt-4 text-center"
-                style="border-color: rgba(255,255,255,0.1) !important; opacity: 0.7;">
-                <p class="mb-0">&copy; 2024 AthleteHub. All rights reserved.</p>
-            </div>
-        </div>
     </footer>
 
     <script src="js/bootstrap.bundle.min.js"></script>

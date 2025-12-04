@@ -35,18 +35,31 @@ try {
         $orderBy = "ORDER BY created_at DESC";
     }
 
-    $result = mysqli_query($conn, "SELECT $select FROM products $orderBy LIMIT 12");
+    $result = mysqli_query($conn, "SELECT $select FROM products $orderBy LIMIT 24");
     if ($result) {
         while ($row = mysqli_fetch_assoc($result)) {
             $imageVal = $imageCol && !empty($row[$imageCol]) ? $row[$imageCol] : 'data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"400\" height=\"300\"%3E%3Crect fill=\"%23f1f3f5\" width=\"400\" height=\"300\"/%3E%3Ctext x=\"50%25\" y=\"50%25\" text-anchor=\"middle\" dy=\".3em\" fill=\"%23999\"%3ENo Image%3C/text%3E%3C/svg%3E';
             $discountVal = $discountCol && isset($row[$discountCol]) ? (int)$row[$discountCol] : 0;
             $originalVal = $originalCol && isset($row[$originalCol]) ? (float)$row[$originalCol] : null;
+            $currentPrice = isset($row['price']) ? (float)$row['price'] : 0;
+
+            // Only show products that an admin has marked with a deal (discount or higher original price)
+            $hasDeal = ($discountVal > 0) || ($originalVal !== null && $originalVal > $currentPrice);
+            if (!$hasDeal) {
+                continue;
+            }
+
+            $basePrice = ($originalVal !== null && $originalVal > 0) ? $originalVal : $currentPrice;
+            $finalPrice = $discountVal > 0 ? $basePrice * (1 - $discountVal / 100) : $currentPrice;
+
             $saleProducts[] = [
                 'id' => (int)$row['id'],
                 'name' => $row['name'] ?? 'Product',
                 'category' => $row['category'] ?? 'Category',
                 'image' => $imageVal,
-                'price' => isset($row['price']) ? (float)$row['price'] : 0,
+                'price' => $currentPrice,
+                'finalPrice' => $finalPrice,
+                'basePrice' => $basePrice,
                 'discount' => $discountVal,
                 'originalPrice' => $originalVal,
                 'rating' => $ratingCol && isset($row[$ratingCol]) ? (int)$row[$ratingCol] : 4,
@@ -95,7 +108,13 @@ try {
                 <div class="col-12">
                     <div class="bg-white border rounded p-5 text-center">
                         <h3 class="fw-bold mb-2">No deals available</h3>
-                        <p class="text-muted mb-0">Please check back later.</p>
+                        <p class="text-muted mb-0">
+                            <?php if ($isAdmin ?? false): ?>
+                                Set deals from the Admin Dashboard by editing products and adding a discount.
+                            <?php else: ?>
+                                Please check back later.
+                            <?php endif; ?>
+                        </p>
                     </div>
                 </div>
             <?php else: ?>
@@ -116,12 +135,14 @@ try {
                             <?php endif; ?>
 
                             <!-- Product Image -->
-                            <div class="position-relative"
-                                style="height: 200px; background-color: #f8f9fa; overflow: hidden;">
+                            <div class="position-relative rounded-bottom"
+                                style="height: 210px; background: radial-gradient(circle at 20% 20%, #eef2ff, #f8fafc); overflow: hidden;">
+                                <div class="position-absolute top-0 start-0 w-100 h-100"
+                                     style="background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(251,191,36,0.1)); mix-blend-mode: multiply;"></div>
                                 <img src="<?php echo $product['image']; ?>"
                                     alt="<?php echo htmlspecialchars($product['name']); ?>" class="w-100 h-100"
-                                    style="object-fit: cover; transition: transform 0.3s;"
-                                    onmouseover="this.style.transform='scale(1.1)'"
+                                    style="object-fit: contain; padding: 12px; transition: transform 0.3s ease;"
+                                    onmouseover="this.style.transform='scale(1.06)'"
                                     onmouseout="this.style.transform='scale(1)'">
                             </div>
 
@@ -158,9 +179,9 @@ try {
                                 <!-- Price -->
                                 <div class="d-flex align-items-baseline gap-2">
                                     <span class="fs-4 fw-bold"
-                                        style="color: #333;">$<?php echo number_format($product['price'], 2); ?></span>
-                                    <?php if (!empty($product['originalPrice'])): ?>
-                                        <span class="text-muted small text-decoration-line-through">$<?php echo number_format($product['originalPrice'], 2); ?></span>
+                                        style="color: #333;">$<?php echo number_format($product['finalPrice'] ?? $product['price'], 2); ?></span>
+                                    <?php if (!empty($product['originalPrice']) || (!empty($product['basePrice']) && ($product['basePrice'] > ($product['finalPrice'] ?? $product['price'])))): ?>
+                                        <span class="text-muted small text-decoration-line-through">$<?php echo number_format($product['basePrice'] ?? $product['originalPrice'], 2); ?></span>
                                     <?php endif; ?>
                                 </div>
                             </div>

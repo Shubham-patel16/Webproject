@@ -145,7 +145,9 @@ function loadCart() {
     let subtotal = 0;
     
     cart.forEach((item, index) => {
-        const itemTotal = item.price * item.quantity;
+        const itemPrice = Number.isFinite(item.price) ? item.price : 0;
+        const itemOriginal = Number.isFinite(item.originalPrice) ? item.originalPrice : 0;
+        const itemTotal = itemPrice * item.quantity;
         subtotal += itemTotal;
         
         html += `
@@ -161,7 +163,10 @@ function loadCart() {
                             <a href="product-detail.php?id=${item.id}" class="text-decoration-none" style="color: #333;">${item.name}</a>
                         </h4>
                         <p class="text-muted small mb-2">Item #${item.id}</p>
-                        <p class="fw-bold mb-0" style="color: #667eea; font-size: 1.1rem;">$${item.price.toFixed(2)}</p>
+                        <p class="fw-bold mb-0" style="color: #667eea; font-size: 1.1rem;">
+                            $${itemPrice.toFixed(2)}
+                            ${itemOriginal>itemPrice ? `<span class="text-muted small text-decoration-line-through">$${itemOriginal.toFixed(2)}</span>` : ''}
+                        </p>
                     </div>
                     <div class="col-12 col-md-2 mb-3 mb-md-0">
                         <label class="form-label small text-muted mb-1">Quantity</label>
