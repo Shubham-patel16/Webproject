@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$categories = ['Laptops', 'Desktops', 'Gaming', 'Accessories', 'Components', 'Webcams'];
+$categories = ['Laptops', 'Desktops', 'Gaming', 'Accessories', 'Webcams'];
 ?>
 
 <div class="min-vh-100" style="background-color: #f8f9fa;">

@@ -178,25 +178,6 @@ try {
                     </a>
                 </div>
 
-                <!-- Components -->
-                <div class="col-6 col-md-4 col-lg-2">
-                    <a href="products.php?category=components" class="text-decoration-none">
-                        <div class="category-card text-center">
-                            <div class="category-icon mb-3">
-                                <div class="d-inline-flex align-items-center justify-content-center p-3"
-                                    style="width: 70px; height: 70px;">
-                                    <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                        style="color: #667eea;">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <h3 class="fw-semibold mb-0" style="font-size: 0.95rem;">Components</h3>
-                        </div>
-                    </a>
-                </div>
-
                 <!-- Webcams -->
                 <div class="col-6 col-md-4 col-lg-2">
                     <a href="products.php?category=webcams" class="text-decoration-none">
@@ -252,11 +233,12 @@ try {
                             class="text-decoration-none d-block h-100">
                             <div class="bg-white rounded border shadow-sm h-100 overflow-hidden"
                                 style="transition: transform 0.2s ease, box-shadow 0.2s ease;">
-                                <div class="position-relative bg-light" style="height: 200px; overflow: hidden;">
+                                <div class="position-relative d-flex align-items-center justify-content-center"
+                                    style="height: 190px; background: linear-gradient(135deg, #f8f9fb 0%, #eef1f6 100%); overflow: hidden;">
                                     <img src="<?php echo htmlspecialchars($product['image']); ?>"
                                         alt="<?php echo htmlspecialchars($product['name']); ?>" class="w-100 h-100"
-                                        style="object-fit: cover; transition: transform 0.3s;"
-                                        onmouseover="this.style.transform='scale(1.05)'"
+                                        style="object-fit: contain; padding: 12px; transition: transform 0.3s ease;"
+                                        onmouseover="this.style.transform='scale(1.04)'"
                                         onmouseout="this.style.transform='scale(1)'">
                                     <?php if (!empty($product['badge'])): ?>
                                         <span class="position-absolute top-0 end-0 m-3 px-3 py-1 rounded-pill fw-semibold"

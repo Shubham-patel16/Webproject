@@ -4,7 +4,7 @@ include 'includes/header.php';
 require_once 'Database/db.php';
 
 // Define categories
-$categories = ['All', 'Laptops', 'Desktops', 'Gaming', 'Accessories', 'Components', 'Webcams'];
+$categories = ['All', 'Laptops', 'Desktops', 'Gaming', 'Accessories', 'Webcams'];
 
 // Normalize image paths (support remote URLs, data URIs, and local uploads)
 function normalizeProductImage($path)
@@ -56,13 +56,6 @@ function categoryMatches($productCategory, $selectedCategory)
 $selectedCategory = isset($_GET['category']) ? ucfirst($_GET['category']) : 'All';
 if (!in_array($selectedCategory, $categories)) {
     $selectedCategory = 'All';
-}
-
-// Get sort option from URL
-$sortBy = isset($_GET['sort']) ? $_GET['sort'] : 'featured';
-$validSorts = ['featured', 'price-low', 'price-high', 'rating'];
-if (!in_array($sortBy, $validSorts)) {
-    $sortBy = 'featured';
 }
 
 // Fetch products from DB so admin-added items appear automatically
@@ -192,7 +185,7 @@ if ($selectedCategory !== 'All') {
                     <h3 class="fw-bold mb-4">Categories</h3>
                     <div class="d-flex flex-column gap-2">
                         <?php foreach ($categories as $cat): ?>
-                            <a href="products.php?category=<?php echo $cat === 'All' ? '' : strtolower($cat); ?>&sort=<?php echo $sortBy; ?>"
+                            <a href="products.php?category=<?php echo $cat === 'All' ? '' : strtolower($cat); ?>"
                                 class="text-decoration-none px-3 py-2 rounded <?php echo ($selectedCategory === $cat || ($cat === 'All' && $selectedCategory === 'All')) ? 'bg-primary text-white fw-semibold' : 'text-dark'; ?>"
                                 style="<?php echo ($selectedCategory === $cat || ($cat === 'All' && $selectedCategory === 'All')) ? '' : 'transition: background-color 0.2s;'; ?>"
                                 onmouseover="<?php echo ($selectedCategory === $cat || ($cat === 'All' && $selectedCategory === 'All')) ? '' : "this.style.backgroundColor='#f8f9fa'"; ?>"
@@ -248,7 +241,6 @@ if ($selectedCategory !== 'All') {
 
             <!-- Products Grid -->
             <div class="col-md-9">
-                <!-- Toolbar -->
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
                     <div class="mb-3 mb-md-0">
                         <h2 class="fw-bold mb-1" style="font-size: 1.75rem;">
@@ -260,18 +252,6 @@ if ($selectedCategory !== 'All') {
                                 <br><small class="text-danger"><?php echo htmlspecialchars($productsError); ?></small>
                             <?php endif; ?>
                         </p>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <select name="sort" id="sort-select" class="form-select" style="width: auto;">
-                            <option value="featured" <?php echo $sortBy === 'featured' ? 'selected' : ''; ?>>Featured
-                            </option>
-                            <option value="price-low" <?php echo $sortBy === 'price-low' ? 'selected' : ''; ?>>Price: Low
-                                to High</option>
-                            <option value="price-high" <?php echo $sortBy === 'price-high' ? 'selected' : ''; ?>>Price:
-                                High to Low</option>
-                            <option value="rating" <?php echo $sortBy === 'rating' ? 'selected' : ''; ?>>Highest Rated
-                            </option>
-                        </select>
                     </div>
                 </div>
 
@@ -330,7 +310,7 @@ if ($selectedCategory !== 'All') {
                         </div>
                     <?php endforeach; ?>
                 </div>
-            </div>
         </div>
+    </div>
 
         <?php include 'includes/footer.php'; ?>

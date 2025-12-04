@@ -18,7 +18,6 @@ function initProductFilters()
     const productItems=Array.from(productsContainer.querySelectorAll('.product-item'));
     const priceFilters=document.querySelectorAll('.price-filter');
     const ratingFilters=document.querySelectorAll('.rating-filter');
-    const sortSelect=document.getElementById('sort-select');
     const productCount=document.getElementById('product-count');
 
     // Store original products for reset
@@ -52,9 +51,6 @@ function initProductFilters()
             }
         });
 
-        // Get sort option
-        const sortOption=sortSelect? sortSelect.value:'featured';
-
         // Filter products
         let filteredProducts=originalProducts.filter(product =>
         {
@@ -70,32 +66,17 @@ function initProductFilters()
             return priceMatch&&ratingMatch;
         });
 
-        // Sort products
-        filteredProducts.sort((a, b) =>
-        {
-            switch (sortOption) {
-                case 'price-low':
-                    return a.price-b.price;
-                case 'price-high':
-                    return b.price-a.price;
-                case 'rating':
-                    return b.rating-a.rating;
-                case 'featured':
-                default:
-                    return 0; // Keep original order
-            }
-        });
-
         // Hide all products first
         productItems.forEach(item =>
         {
             item.style.display='none';
         });
 
-        // Show filtered and sorted products
+        // Show filtered and sorted products (and reorder DOM to reflect sort)
         filteredProducts.forEach(product =>
         {
             product.element.style.display='block';
+            productsContainer.appendChild(product.element);
         });
 
         // Update product count
@@ -138,11 +119,6 @@ function initProductFilters()
     {
         filter.addEventListener('change', filterAndDisplayProducts);
     });
-
-    // Add event listener to sort select
-    if (sortSelect) {
-        sortSelect.addEventListener('change', filterAndDisplayProducts);
-    }
 
     // Initial filter (in case some filters are unchecked by default)
     filterAndDisplayProducts();
