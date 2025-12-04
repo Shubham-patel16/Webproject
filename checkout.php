@@ -103,19 +103,19 @@ $total = 0;
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label fw-semibold">Card Number</label>
-                            <input type="text" class="form-control" placeholder="1234 5678 9012 3456" maxlength="19" required>
+                            <input type="text" class="form-control" name="card_number" form="checkoutForm" placeholder="1234 5678 9012 3456" maxlength="19" inputmode="numeric" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Expiry Date</label>
-                            <input type="text" class="form-control" placeholder="MM/YY" maxlength="5" required>
+                            <input type="text" class="form-control" name="card_expiry" form="checkoutForm" placeholder="MM/YY" maxlength="5" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">CVV</label>
-                            <input type="text" class="form-control" placeholder="123" maxlength="3" required>
+                            <input type="text" class="form-control" name="card_cvv" form="checkoutForm" placeholder="123" maxlength="4" inputmode="numeric" required>
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-semibold">Cardholder Name</label>
-                            <input type="text" class="form-control" required>
+                            <input type="text" class="form-control" name="card_name" form="checkoutForm" required>
                         </div>
                     </div>
                 </div>
