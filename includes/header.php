@@ -33,7 +33,7 @@ $isAdmin = (isset($_SESSION['admin']) && $_SESSION['admin'] === true) || (isset(
                 </div>
                 <span class="logo-text">Premium Collection</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse"
                 data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
                 aria-label="Toggle navigation">
 
