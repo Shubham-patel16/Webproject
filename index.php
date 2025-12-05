@@ -24,6 +24,7 @@ try {
             $selectFields[] = $field;
         }
     }
+    
     if ($imageCol) $selectFields[] = $imageCol;
     if ($stockCol) $selectFields[] = $stockCol;
     if ($ratingCol) $selectFields[] = $ratingCol;
